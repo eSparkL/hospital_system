@@ -43,10 +43,12 @@
       <el-table-column prop="dEmail" label="邮箱" width="150"/>
       <el-table-column prop="dAvgStar" label="评分/5分" width="80"/>
       <el-table-column prop="dPrice" label="挂号费/元" width="80"/>
-      <el-table-column prop="dState" label="是否在职" width="80">
+      <el-table-column prop="dState" label="状态" width="80">
         <template slot-scope="scope">
           <el-tag type="primary" v-if="scope.row.dState === 1">在职</el-tag>
-          <el-tag type="danger" v-else>离职</el-tag>
+          <el-tag type="danger" v-else-if="scope.row.dState === 0">离职</el-tag>
+          <el-tag type="warning" v-else-if="scope.row.dState === 2">暂休</el-tag>
+          <el-tag type="info" v-else-if="scope.row.dState === 3">退休</el-tag>
         </template>
       </el-table-column>
       <el-table-column label="操作" width="200" fixed="right">
@@ -274,11 +276,12 @@
           </el-input>
         </el-form-item>
         <el-form-item label="状态" label-width="80px" prop="dState">
-          <el-input
-            v-model="modifyForm.dState"
-            autocomplete="off"
-            disabled
-          ></el-input>
+          <el-select v-model="modifyForm.dState" placeholder="请选择状态">
+            <el-option label="在职" value="1"></el-option>
+            <el-option label="离职" value="0"></el-option>
+            <el-option label="暂休" value="2"></el-option>
+            <el-option label="退休" value="3"></el-option>
+          </el-select>
         </el-form-item>
       </el-form>
       <div slot="footer" class="dialog-footer">
@@ -346,6 +349,9 @@ export default {
         "口腔颌面外科",
       ],
       rules: {
+        dState: [
+          { required: true, message: "请选择状态", trigger: "change" }
+        ],
         dId: [
           { required: true, message: "请输入账号", trigger: "blur" },
           {
@@ -399,7 +405,7 @@ export default {
         ],
       },
       modifyFormVisible: false,
-      modifyForm: {},
+      modifyForm: {dState: "1"},
     };
   },
   methods: {
@@ -420,6 +426,7 @@ export default {
                 dCard: this.modifyForm.dCard,
                 dPrice: this.modifyForm.dPrice,
                 dIntroduction: this.modifyForm.dIntroduction,
+                dState: this.modifyForm.dState,
               },
             })
             .then((res) => {
