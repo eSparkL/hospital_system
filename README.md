@@ -10,7 +10,7 @@ B站`【狂神说Java】Git最新教程通俗易懂`，视频共约两小时，�
 ## 克隆项目
 
 ```bash
-git clone https://github.com/HanYiton/News-recommendation-system.git
+git clone https://github.com/eSparkL/hospital_system.git
 ```
 
 ## Git 提交规范
