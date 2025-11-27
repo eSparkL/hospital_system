@@ -91,7 +91,7 @@ public class Doctor {
     /**
      * 是否在职
      */
-    @Excel(name = "是否在职", replace = {"在职_1","离职_0"})
+    @Excel(name = "是否在职", replace = {"在职_1","离职_0", "暂休_2", "退休_3"})
     @JsonProperty("dState")
     private Integer dState;
 

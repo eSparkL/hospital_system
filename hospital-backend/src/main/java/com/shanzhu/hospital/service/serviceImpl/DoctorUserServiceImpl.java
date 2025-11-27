@@ -154,7 +154,7 @@ public class DoctorUserServiceImpl extends ServiceImpl<DoctorUserMapper, Doctor>
         //更新为不在职状态
         Doctor doctor = new Doctor();
         doctor.setDId(dId);
-        doctor.setDState(0);
+        doctor.setDState(0); // 保持删除即改为离职状态
 
         return this.updateById(doctor);
     }
