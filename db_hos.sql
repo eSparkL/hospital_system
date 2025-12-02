@@ -257,3 +257,36 @@ INSERT INTO `patient_user` VALUES (2003, 'e10adc3949ba59abbe56e057f20f883e', '�
 INSERT INTO `patient_user` VALUES (2004, 'e10adc3949ba59abbe56e057f20f883e', '马女士', '女', '18766235473', '376662537482735', 'ma@qq.com', 1, '2017-11-06', 6);
 
 SET FOREIGN_KEY_CHECKS = 1;
+
+-- ----------------------------
+-- Table structure for news (医院资讯表)
+-- ----------------------------
+DROP TABLE IF EXISTS `news`;
+CREATE TABLE `news` (
+  `news_id` int NOT NULL AUTO_INCREMENT COMMENT '资讯ID',
+  `title` varchar(200) CHARACTER SET utf8mb3 COLLATE utf8mb3_general_ci NOT NULL COMMENT '标题',
+  `content` text CHARACTER SET utf8mb3 COLLATE utf8mb3_general_ci NULL COMMENT '内容',
+  `cover_image` varchar(500) CHARACTER SET utf8mb3 COLLATE utf8mb3_general_ci NULL DEFAULT NULL COMMENT '封面图片',
+  `news_type` varchar(50) CHARACTER SET utf8mb3 COLLATE utf8mb3_general_ci NULL DEFAULT 'general' COMMENT '类型：医院动态、健康科普、通知公告等',
+  `status` tinyint NOT NULL DEFAULT '1' COMMENT '状态：0-下架，1-已发布，2-草稿',
+  `publish_time` datetime NULL DEFAULT NULL COMMENT '发布时间',
+  `author_id` int NULL DEFAULT NULL COMMENT '发布人ID（管理员ID）',
+  `view_count` int NULL DEFAULT '0' COMMENT '浏览量',
+  `is_top` tinyint NULL DEFAULT '0' COMMENT '是否置顶：0-否，1-是',
+  `create_time` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
+  `update_time` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间',
+  PRIMARY KEY (`news_id`) USING BTREE,
+  INDEX `idx_status`(`status` ASC) USING BTREE,
+  INDEX `idx_type`(`news_type` ASC) USING BTREE,
+  INDEX `idx_top`(`is_top` ASC) USING BTREE
+) ENGINE = InnoDB AUTO_INCREMENT = 1 CHARACTER SET = utf8mb3 COLLATE = utf8mb3_general_ci COMMENT = '医院资讯表' ROW_FORMAT = DYNAMIC;
+
+-- ----------------------------
+-- Records of news (插入示例数据)
+-- ----------------------------
+INSERT INTO `news` (`title`, `content`, `cover_image`, `news_type`, `status`, `publish_time`, `author_id`, `view_count`, `is_top`) VALUES
+('我院荣获"全国优秀口腔医院"称号', '<p>在近日举行的全国口腔医疗质量评比中，我院凭借卓越的医疗服务和专业的医疗团队，荣获"全国优秀口腔医院"称号。</p><p>这是对我院多年来坚持"以患者为中心"服务理念的充分肯定。</p>', '/images/news1.jpg', '医院动态', 1, NOW(), 202301, 0, 1),
+('口腔健康科普：如何正确刷牙', '<p>正确的刷牙方法可以有效预防口腔疾病：</p><ol><li>每天至少刷牙两次</li><li>每次刷牙不少于2分钟</li><li>使用软毛牙刷</li><li>定期更换牙刷</li></ol>', '/images/news2.jpg', '健康科普', 1, NOW(), 202301, 0, 0),
+('冬季口腔护理注意事项', '<p>冬季天气干燥，容易引发口腔问题：</p><p>1. 多喝水保持口腔湿润</p><p>2. 避免食用过热过冷的食物</p><p>3. 注意室内加湿</p>', '/images/news3.jpg', '健康科普', 1, NOW(), 202301, 0, 1),
+('元旦期间门诊安排通知', '<p>元旦期间（1月1日-1月3日）门诊安排如下：</p><p>急诊：24小时开放</p><p>普通门诊：上午8:00-12:00</p><p>祝大家元旦快乐！</p>', NULL, '通知公告', 1, NOW(), 202301, 0, 0);
+
