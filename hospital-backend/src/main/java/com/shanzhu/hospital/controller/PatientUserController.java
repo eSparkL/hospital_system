@@ -9,6 +9,9 @@ import com.shanzhu.hospital.service.DoctorUserService;
 import com.shanzhu.hospital.service.OrderService;
 import com.shanzhu.hospital.service.PatientUserService;
 import com.shanzhu.hospital.utils.PdfUtil;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import org.apache.commons.lang3.BooleanUtils;
 import org.springframework.web.bind.annotation.*;
@@ -23,6 +26,7 @@ import java.util.List;
 @RestController
 @RequestMapping("patient")
 @RequiredArgsConstructor
+@Tag(name = "患者接口", description = "患者相关操作接口")
 public class PatientUserController {
 
     private final DoctorUserService doctorUserService;

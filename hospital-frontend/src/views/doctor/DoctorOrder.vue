@@ -26,8 +26,7 @@
         <el-table-column prop="oRecord" label="病因" width="200px"/>
         <el-table-column prop="oCheck" label="检查项目" width="180px"/>
         <el-table-column prop="oTotalPrice" label="需交费用/元" width="80px"/>
-        <el-table-column prop="oPriceState" label="缴费状态" width="100px"
-        >
+        <el-table-column prop="oPriceState" label="缴费状态" width="100px">
           <template slot-scope="scope">
             <el-tag
               type="success"
@@ -63,6 +62,7 @@
             </el-tag>
           </template>
         </el-table-column>
+        <el-table-column prop="oAdvice" label="复诊建议" width="200px"/>
         <el-table-column label="操作" width="140" fixed="right">
           <template slot-scope="scope">
             <el-button

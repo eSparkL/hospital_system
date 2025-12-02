@@ -47,17 +47,7 @@ mybatis-plus:
     map-underscore-to-camel-case: true
 
 # Swagger配置
-springdoc:
-  api-docs:
-    path: /api-docs
-  swagger-ui:
-    path: /swagger-ui.html
-  packages-to-scan: com.shanzhu.hospital.controller
-  openapi:
-    info:
-      title: 医院管理系统 API文档
-      description: 医院管理系统的 API documentation
-      version: 1.0.0
-      contact:
-        name: 开发者
-        email: dev@example.com
+springfox:
+  documentation:
+    swagger-ui:
+      base-url: /

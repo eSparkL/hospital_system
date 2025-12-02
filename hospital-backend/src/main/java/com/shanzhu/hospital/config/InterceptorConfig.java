@@ -2,6 +2,7 @@ package com.shanzhu.hospital.config;
 
 import org.springframework.stereotype.Component;
 import org.springframework.web.servlet.config.annotation.InterceptorRegistry;
+import org.springframework.web.servlet.config.annotation.ResourceHandlerRegistry;
 import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
 
 /**
@@ -33,10 +34,12 @@ public class InterceptorConfig implements WebMvcConfigurer {
                 .excludePathPatterns("/**/addPatient")
 
                 // 6. 可选的：Swagger文档接口（如果有）
-                .excludePathPatterns("/swagger-ui/**")
-                .excludePathPatterns("/swagger-resources/**")
-                .excludePathPatterns("/v3/api-docs/**")
-                .excludePathPatterns("/webjars/**")
+                .excludePathPatterns("/swagger-ui.html", 
+                        "/swagger-resources/**", 
+                        "/webjars/**", 
+                        "/v2/**",
+                        "/swagger-ui/**",
+                        "/v3/api-docs/**")
 
                 // 7. 静态资源
                 .excludePathPatterns("/static/**")
@@ -48,6 +51,14 @@ public class InterceptorConfig implements WebMvcConfigurer {
 
                 // 8. 错误页面
                 .excludePathPatterns("/error");
+    }
+    
+    @Override
+    public void addResourceHandlers(ResourceHandlerRegistry registry) {
+        registry.addResourceHandler("swagger-ui.html")
+                .addResourceLocations("classpath:/META-INF/resources/");
+        registry.addResourceHandler("/webjars/**")
+                .addResourceLocations("classpath:/META-INF/resources/webjars/");
     }
 
 }
