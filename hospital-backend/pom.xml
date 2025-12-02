@@ -98,8 +98,10 @@
         <dependency>
             <groupId>org.projectlombok</groupId>
             <artifactId>lombok</artifactId>
-            <version>1.18.10</version>
-            <scope>provided</scope>
+            <!-- 可以升级到更新的版本 -->
+            <version>1.18.24</version>
+            <!-- 移除或修改 scope -->
+            <scope>compile</scope>  <!-- 或者直接删除 scope 行 -->
         </dependency>
 
         <!-- hutool -->
