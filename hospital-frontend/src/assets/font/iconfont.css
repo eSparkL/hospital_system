@@ -153,6 +153,8 @@
   content: "\e671";
 }
 
+.icon-news:before { content: "\e6b8"; }
+.icon-news-menu:before { content: "\e6b9"; }
 
 
 

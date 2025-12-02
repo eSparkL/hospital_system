@@ -13,7 +13,7 @@
     <el-row>
       <el-col :span="24">
         <div style="text-align: center;width: 100%;">
-          <img src="@/assets/homepage-back.jpg" style="width: 941px;margin-left: 25px;">
+          <img src="@/assets/background.png" style="width: 941px;margin-left: 25px;">
         </div>
       </el-col>
     </el-row>

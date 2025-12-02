@@ -70,6 +70,16 @@
 
           </el-submenu>
 
+          <!-- 新增：资讯管理菜单 -->
+          <el-submenu index="sub-menu4">
+            <template slot="title">
+              <span style="font-size: 18px;color: #2b5d88">资讯管理</span>
+            </template>
+            <el-menu-item index="newsManage" @click="menuClick('newsManage')">
+              <i class="iconfont icon-news-menu" style="font-size: 18px;"> 资讯管理</i>
+            </el-menu-item>
+          </el-submenu>
+
           <!--          <el-submenu index="submenu-4">-->
           <!--            <template slot="title">-->
           <!--              <span style="font-size: 18px;color: #2b5d88">数据统计</span>-->
@@ -90,6 +100,7 @@
     </el-container>
   </el-container>
 </template>
+<!-- 修改 AdminUser.vue 中的 menuClick 方法 -->
 <script>
 import jwtDecode from "jwt-decode";
 import { getToken, clearToken, getActivePath, setActivePath} from "@/utils/storage.js";
@@ -111,7 +122,10 @@ export default {
     menuClick(path){
       this.activePath=path;
       setActivePath(path);
-      if(this.$route.path !== "/"+path) this.$router.push(path);
+      // 使用/admin/前缀
+      if(this.$route.path !== `/admin/${path}`) {
+        this.$router.push(`/admin/${path}`);
+      }
     },
     //管理员
     logoutAdmin() {
