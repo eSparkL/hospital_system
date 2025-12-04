@@ -130,7 +130,7 @@ const routes = [
     },
     // 资讯管理使用相对路径，这样会在AdminUser布局内显示
       {
-        path: "newsManage",  // 注意：这里没有斜杠
+        path: "/newsManage",  // 注意：这里没有斜杠
         component: () => import('@/views/admin/NewsManage.vue'),
         meta: {
           requireAuth: true,

@@ -1,6 +1,3 @@
-<!--
- * 病患挂号科室选择页面
--->
 <template>
   <div>
     <el-card>
@@ -181,7 +178,9 @@
         </el-button>
       </div>
     </el-dialog>
-
+    
+    <!-- AI助手浮窗 -->
+    <AiAssistant />
 
   </div>
 </template>
@@ -189,9 +188,13 @@
 import request from "@/utils/request";
 import jwtDecode from "jwt-decode";
 import {getToken} from "@/utils/storage";
+import AiAssistant from "@/views/patient/AiAssistant.vue";
 
 export default {
   name: "orderOperate",
+  components: {
+    AiAssistant
+  },
   data() {
     return {
       //科室数据

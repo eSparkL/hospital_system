@@ -1,5 +1,6 @@
 package com.shanzhu.hospital.service;
 
+import com.shanzhu.hospital.entity.po.Arrange;
 import com.shanzhu.hospital.entity.po.Orders;
 import com.shanzhu.hospital.entity.vo.OrderArrangeVo;
 import com.shanzhu.hospital.entity.vo.OrdersPageVo;
@@ -13,24 +14,6 @@ import java.util.List;
 public interface OrderService {
 
     /**
-     * 查询挂号信息 - 分页
-     *
-     * @param pageNum  分页页数
-     * @param pageSize 分页大小
-     * @param query    查询条件
-     * @return 挂号列表
-     */
-    OrdersPageVo findOrdersPages(Integer pageNum, Integer pageSize, String query);
-
-    /**
-     * 删除挂号单
-     *
-     * @param oId 挂号单id
-     * @return 结果
-     */
-    Boolean deleteOrder(Integer oId);
-
-    /**
      * 添加挂号单
      *
      * @param order 挂号单信息
@@ -38,31 +21,6 @@ public interface OrderService {
      * @return 结果
      */
     Boolean addOrder(Orders order, String arId);
-
-    /**
-     * 查询病患挂号
-     *
-     * @param pId 病患id
-     * @return 挂号信息
-     */
-    List<Orders> findOrderByPid(Integer pId);
-
-    /**
-     * 查询挂号
-     *
-     * @param oId 挂号单id
-     * @return 挂号信息
-     */
-    Orders findOrderByOid(Integer oId);
-
-    /**
-     * 查看当天挂号
-     *
-     * @param dId    医生id
-     * @param oStart 日期时间
-     * @return 挂号数据
-     */
-    List<Orders> findOrderByNull(Integer dId, String oStart);
 
     /**
      * 更新挂号单
@@ -159,4 +117,54 @@ public interface OrderService {
      */
     List<String> countOrderSection();
 
+    /**
+     * 查询病患挂号
+     *
+     * @param pId 病患id
+     * @return 挂号信息
+     */
+    List<Orders> findOrderByPid(Integer pId);
+
+    /**
+     * 查询挂号
+     *
+     * @param oId 挂号单id
+     * @return 挂号信息
+     */
+    Orders findOrderByOid(Integer oId);
+
+    /**
+     * 查看当天挂号
+     *
+     * @param dId    医生id
+     * @param oStart 日期时间
+     * @return 挂号数据
+     */
+    List<Orders> findOrderByNull(Integer dId, String oStart);
+    
+    /**
+     * 查询指定日期的所有预约
+     * 
+     * @param date 日期 (格式: yyyy-MM-dd)
+     * @return 预约列表
+     */
+    List<Orders> getOrdersByDate(String date);
+    
+    /**
+     * 分页查询挂号信息
+     * 
+     * @param pageNum 页码
+     * @param pageSize 每页数量
+     * @param query 查询条件
+     * @return 挂号信息分页结果
+     */
+    OrdersPageVo findOrdersPages(Integer pageNum, Integer pageSize, String query);
+    
+    /**
+     * 删除挂号单
+     * 
+     * @param oId 挂号单ID
+     * @return 删除结果
+     */
+    Boolean deleteOrder(Integer oId);
 }

@@ -36,44 +36,6 @@ public class OrderServiceImpl extends ServiceImpl<OrderMapper, Orders> implement
     private final ArrangeMapper arrangeMapper;
 
     /**
-     * 查询挂号信息 - 分页
-     *
-     * @param pageNum  分页页数
-     * @param pageSize 分页大小
-     * @param query    查询条件
-     * @return 挂号列表
-     */
-    @Override
-    public OrdersPageVo findOrdersPages(Integer pageNum, Integer pageSize, String query) {
-        //分页条件
-        Page<Orders> page = new Page<>(pageNum, pageSize);
-
-        //查询条件
-        LambdaQueryWrapper<Orders> lambdaQuery = Wrappers.<Orders>lambdaQuery()
-                .like(Orders::getPId, query);
-
-        //分页查询
-        IPage<Orders> iPage = this.page(page, lambdaQuery);
-
-        //组装分页结果
-        OrdersPageVo pageVo = new OrdersPageVo();
-        pageVo.populatePage(iPage);
-
-        return pageVo;
-    }
-
-    /**
-     * 删除挂号单
-     *
-     * @param oId 挂号单id
-     * @return 结果
-     */
-    @Override
-    public Boolean deleteOrder(Integer oId) {
-        return this.removeById(oId);
-    }
-
-    /**
      * 添加挂号单
      *
      * @param order 挂号单信息
@@ -195,14 +157,14 @@ public class OrderServiceImpl extends ServiceImpl<OrderMapper, Orders> implement
 
         //查询条件
         LambdaQueryWrapper<Orders> lambdaQuery = Wrappers.<Orders>lambdaQuery()
-                //模糊匹配病患id
-                .like(Orders::getPId, pid)
+                //挂号单结束时间不为空
+                .isNotNull(Orders::getOEnd)
+                //病患id
+                .eq(Orders::getPId, pid)
                 //医生id
-                .eq(Orders::getDId, dId)
-                //状态1
-                .eq(Orders::getOState, 1)
-                //按状态降序
-                .orderByDesc(Orders::getOState);
+                .eq(dId != null, Orders::getDId, dId)
+                //按照挂号单结束时间倒序
+                .orderByDesc(Orders::getOEnd);
 
         //分页查询
         IPage<Orders> iPage = this.page(page, lambdaQuery);
@@ -223,30 +185,39 @@ public class OrderServiceImpl extends ServiceImpl<OrderMapper, Orders> implement
      * @param dId      医生id
      * @return 挂号单
      */
-    public OrdersPageVo findOrderByDid(
-            Integer pageNum, Integer pageSize, String pId, Integer dId
-    ) {
-        //分页条件
-        Page<Orders> page = new Page<>(pageNum, pageSize);
-
-        //查询条件
-        LambdaQueryWrapper<Orders> lambdaQuery = Wrappers.<Orders>lambdaQuery()
-                //模糊匹配病患id
-                .like(Orders::getPId, pId)
-                //医生id
-                .eq(Orders::getDId, dId)
-                //按状态降序
-                .orderByDesc(Orders::getOState);
-
-        //分页查询
-        IPage<Orders> iPage = this.page(page, lambdaQuery);
-
-        //组装结果
-        OrdersPageVo pageVo = new OrdersPageVo();
-        pageVo.populatePage(iPage);
-
-        return pageVo;
+@Override
+public OrdersPageVo findOrderByDid(
+        Integer pageNum, Integer pageSize, String pId, Integer dId
+) {
+    if (dId == null) {
+        throw new IllegalArgumentException("医生ID不能为空");
     }
+
+    Page<Orders> page = new Page<>(pageNum, pageSize);
+
+    LambdaQueryWrapper<Orders> lambdaQuery = Wrappers.<Orders>lambdaQuery()
+            .eq(Orders::getDId, dId)
+            .orderByAsc(Orders::getOStart);
+
+    // 如果 query 不为空，则加上 pId 条件
+    if (pId != null && !pId.trim().isEmpty()) {
+        try {
+            Integer pIdInt = Integer.parseInt(pId);
+            lambdaQuery.eq(Orders::getPId, pIdInt);
+        } catch (NumberFormatException e) {
+            log.warn("病患ID格式错误: {}");
+            return new OrdersPageVo(); // 返回空结果
+        }
+    }
+
+    IPage<Orders> iPage = this.page(page, lambdaQuery);
+
+    OrdersPageVo pageVo = new OrdersPageVo();
+    pageVo.populatePage(iPage);
+
+    return pageVo;
+}
+
 
     /**
      * 统计挂号人数
@@ -300,12 +271,17 @@ public class OrderServiceImpl extends ServiceImpl<OrderMapper, Orders> implement
      * @param oId 挂号单id
      * @return 结果
      */
+    @Override
     public Boolean findTotalPrice(int oId) {
-        Orders order = this.getById(oId);
-        if (order.getOTotalPrice() != 0.00) {
-            order.setOPriceState(0);
+        Orders orders = lambdaQuery()
+                //挂号单id
+                .eq(Orders::getOId, oId)
+                //费用大于0
+                .gt(Orders::getOTotalPrice, 0)
+                .one();
 
-            this.updateById(order);
+        //存在未缴费订单
+        if (orders != null) {
             return Boolean.TRUE;
         }
 
@@ -320,13 +296,14 @@ public class OrderServiceImpl extends ServiceImpl<OrderMapper, Orders> implement
      */
     @Override
     public OrderArrangeVo findOrderTime(String arId) {
-        //查询排班信息
-        Arrange arrange = arrangeMapper.selectById(arId);
+        //通过排班id查询排班信息
+        Arrange arrange = this.arrangeMapper.selectById(arId);
 
-        OrderArrangeVo orderArrangeVo = new OrderArrangeVo();
-        orderArrangeVo.setOrderDate(arrange.getArTime());
+        //组装数据
+        OrderArrangeVo vo = new OrderArrangeVo();
+        vo.setOrderDate(arrange.getArTime());
 
-        return orderArrangeVo;
+        return vo;
     }
 
     /**
@@ -334,13 +311,66 @@ public class OrderServiceImpl extends ServiceImpl<OrderMapper, Orders> implement
      *
      * @return 人数
      */
-    @Override
     public List<String> countOrderSection() {
-        //过去20天开始时间
-        LocalDate beginDate = LocalDate.now().minusDays(20);
-        String startTime = beginDate.format(DateTimeFormatter.ofPattern(DatePattern.NORM_DATE_PATTERN));
-        String endTime = DateUtil.now();
+        //计算20天前的时间
+        String endTime = DateUtil.format(DateUtil.date(), DatePattern.NORM_DATE_PATTERN);
+        String startTime = DateUtil.format(DateUtil.offsetDay(DateUtil.date(), -20), DatePattern.NORM_DATE_PATTERN);
 
-        return this.orderMapper.orderSection(startTime, endTime);
+        return orderMapper.orderSection(startTime, endTime);
+    }
+
+    /**
+     * 查询指定日期的所有预约
+     * 
+     * @param date 日期 (格式: yyyy-MM-dd)
+     * @return 预约列表
+     */
+    @Override
+    public List<Orders> getOrdersByDate(String date) {
+        // 使用 LambdaQueryWrapper 查询指定日期的预约
+        return lambdaQuery()
+                // 使用 LIKE 匹配日期部分 (假设 oStart 字段存储的是日期时间字符串)
+                .like(Orders::getOStart, date)
+                // 确保只查询未完成的预约
+                .eq(Orders::getOState, 0)
+                .list();
+    }
+    
+    /**
+     * 分页查询挂号信息
+     * 
+     * @param pageNum 页码
+     * @param pageSize 每页数量
+     * @param query 查询条件
+     * @return 挂号信息分页结果
+     */
+    @Override
+    public OrdersPageVo findOrdersPages(Integer pageNum, Integer pageSize, String query) {
+        //分页条件
+        Page<Orders> page = new Page<>(pageNum, pageSize);
+
+        //查询条件
+        LambdaQueryWrapper<Orders> lambdaQuery = Wrappers.<Orders>lambdaQuery()
+                .like(Orders::getOId, query);
+
+        //分页查询
+        IPage<Orders> iPage = this.page(page, lambdaQuery);
+
+        //组装结果
+        OrdersPageVo pageVo = new OrdersPageVo();
+        pageVo.populatePage(iPage);
+
+        return pageVo;
+    }
+    
+    /**
+     * 删除挂号单
+     * 
+     * @param oId 挂号单ID
+     * @return 删除结果
+     */
+    @Override
+    public Boolean deleteOrder(Integer oId) {
+        return this.removeById(oId);
     }
 }

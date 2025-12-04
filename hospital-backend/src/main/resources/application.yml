@@ -16,7 +16,7 @@ spring:
     driver-class-name: com.mysql.cj.jdbc.Driver
     url: jdbc:mysql://localhost:3306/db_hos?characterEncoding=utf8&useSSL=false&serverTimezone=Asia/Shanghai&allowPublicKeyRetrieval=true
     username: root
-    password: 12345678
+    password: 859273
 
   # 文件上传配置
   servlet:
@@ -34,6 +34,19 @@ spring:
   mvc:
     static-path-pattern: /uploads/**
 
+  # 邮件配置
+  mail:
+    host: smtp.163.com
+    port: 25
+    username: 17180631819@163.com
+    password: ZHxW7xYssmaj8qKs
+    properties:
+      mail:
+        smtp:
+          auth: true
+          starttls:
+            enable: true
+
 # 自定义配置
 file:
   upload:
@@ -45,6 +58,13 @@ mybatis-plus:
   mapper-locations: classpath*:mapper/*.xml
   configuration:
     map-underscore-to-camel-case: true
+
+# 大语言模型配置
+llm:
+  api:
+    key: sk-TMe6dYqpxvJgQXfK82mhCpqPcOcxzMVjr3EylpcfowuKipR1
+    url: https://api.chatanywhere.tech/v1/chat/completions
+  model: gpt-3.5-turbo
 
 # Swagger配置
 springfox:

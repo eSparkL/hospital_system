@@ -1,6 +1,3 @@
-<!--
- * 病患首页
--->
 <template>
   <div>
     <el-row>
@@ -21,6 +18,7 @@
 </template>
 <script>
 import request from "@/utils/request.js";
+
 export default {
   name: "PatientLayout",
   data() {

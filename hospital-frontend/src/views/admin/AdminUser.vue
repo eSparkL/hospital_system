@@ -123,9 +123,7 @@ export default {
       this.activePath=path;
       setActivePath(path);
       // 使用/admin/前缀
-      if(this.$route.path !== `/admin/${path}`) {
-        this.$router.push(`/admin/${path}`);
-      }
+      if(this.$route.path !=="/"+path)this.$router.push(path);
     },
     //管理员
     logoutAdmin() {
