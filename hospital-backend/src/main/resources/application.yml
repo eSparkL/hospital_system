@@ -62,7 +62,7 @@ mybatis-plus:
 # 大语言模型配置
 llm:
   api:
-    key: sk-TMe6dYqpxvJgQXfK82mhCpqPcOcxzMVjr3EylpcfowuKipR1
+    key: sk-
     url: https://api.chatanywhere.tech/v1/chat/completions
   model: gpt-3.5-turbo
 
