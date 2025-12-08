@@ -1,4 +1,3 @@
-<!-- NewsManage.vue -->
 <template>
   <div class="news-manage">
     <!-- 搜索和操作栏 -->
@@ -50,7 +49,6 @@
           </el-tag>
         </template>
       </el-table-column>
-      <!-- <el-table-column prop="viewCount" label="浏览量" width="100"></el-table-column> -->
       <el-table-column prop="publishTime" label="发布时间" width="160"></el-table-column>
       <el-table-column label="封面图片" width="100">
         <template slot-scope="scope">
@@ -62,7 +60,6 @@
       </el-table-column>
       <el-table-column label="操作" width="340" fixed="right">
         <template slot-scope="scope">
-        <!-- 添加包裹div，让按钮在同一行 -->
             <div class="operation-buttons" style="display: flex; gap: 5px;">
                 <el-button size="mini" @click="showEditDialog(scope.row)">编辑</el-button>
                 <el-button 
@@ -98,7 +95,7 @@
     <el-dialog 
       :title="dialogTitle" 
       :visible.sync="dialogVisible"
-      width="60%"
+      width="80%"
       @close="resetForm">
       <el-form :model="form" :rules="rules" ref="newsForm" label-width="100px">
         <el-form-item label="标题" prop="title">
@@ -138,31 +135,50 @@
               <el-button type="primary" icon="el-icon-upload">上传封面</el-button>
               <div slot="tip" class="upload-tip">支持JPG/PNG/GIF格式，大小不超过2MB</div>
             </el-upload>
-            
-            <!-- URL输入框 -->
-            <!-- <div class="url-input">
-              <el-input 
-                v-model="form.coverImage" 
-                placeholder="或直接输入图片URL"
-                size="small"
-                style="margin-top: 10px;">
-                <template slot="append">
-                  <el-button @click="testImageUrl">测试</el-button>
-                </template>
-              </el-input>
-            </div> -->
           </div>
         </el-form-item>
         
         <el-form-item label="内容" prop="content">
           <div class="content-editor">
-            <el-input 
-              type="textarea" 
-              v-model="form.content" 
-              :rows="10"
-              placeholder="请输入资讯内容，支持HTML格式">
-            </el-input>
-            <div class="editor-tools">
+            <!-- 富文本编辑器工具栏 -->
+            <div class="editor-toolbar">
+              <!-- <el-button 
+                type="text" 
+                size="mini" 
+                @click="insertText('<strong>', '</strong>')">
+                <strong>B</strong>
+              </el-button>
+              <el-button 
+                type="text" 
+                size="mini" 
+                @click="insertText('<em>', '</em>')">
+                <em>I</em>
+              </el-button>
+              <el-button 
+                type="text" 
+                size="mini" 
+                @click="insertText('<u>', '</u>')">
+                <u>U</u>
+              </el-button>
+              <el-button 
+                type="text" 
+                size="mini" 
+                @click="insertText('<h3>', '</h3>')">
+                H3
+              </el-button>
+              <el-button 
+                type="text" 
+                size="mini" 
+                @click="insertText('<p>', '</p>')">
+                段落
+              </el-button>
+              <el-button 
+                type="text" 
+                size="mini" 
+                @click="insertText('<ul><li>', '</li></ul>')">
+                列表
+              </el-button> -->
+              
               <el-upload
                 class="editor-upload"
                 action="/upload/editor"
@@ -172,8 +188,24 @@
                 :before-upload="beforeEditorUpload"
                 accept=".jpg,.jpeg,.png,.gif"
               >
-               
+                <el-button type="text" size="mini" icon="el-icon-picture">插入图片</el-button>
               </el-upload>
+            </div>
+            
+            <!-- 编辑器内容区域 -->
+            <el-input 
+              type="textarea" 
+              v-model="form.content" 
+              :rows="15"
+              placeholder="请输入资讯内容，支持HTML格式">
+            </el-input>
+            
+            <div class="editor-preview">
+              <el-button type="text" size="mini" @click="togglePreview">
+                {{ isPreview ? '编辑模式' : '预览' }}
+              </el-button>
+              
+              <div v-if="isPreview" class="preview-content" v-html="form.content"></div>
             </div>
           </div>
         </el-form-item>
@@ -248,7 +280,10 @@ export default {
       
       // 图片预览
       imagePreviewVisible: false,
-      previewImageUrl: ''
+      previewImageUrl: '',
+      
+      // 富文本编辑器相关
+      isPreview: false
     };
   },
   mounted() {
@@ -301,12 +336,14 @@ export default {
         status: 2,
         isTop: 0
       };
+      this.isPreview = false;
       this.dialogVisible = true;
     },
     
     showEditDialog(row) {
       this.dialogTitle = '编辑资讯';
       this.form = { ...row };
+      this.isPreview = false;
       this.dialogVisible = true;
     },
     
@@ -314,9 +351,14 @@ export default {
       this.$refs.newsForm.validate(valid => {
         if (!valid) return;
         
+        // 关键修改：将文本中的换行符转换为<br>标签（处理用户输入的换行）
+        const contentWithBr = this.form.content.replace(/\n/g, '<br>');
+        // 深拷贝表单数据，避免直接修改原表单的content值（不影响编辑框显示）
+        const submitData = { ...this.form, content: contentWithBr };
+        
         if (this.form.newsId) {
           // 编辑
-          request.post('admin/news/update', this.form)
+          request.post('admin/news/update', submitData)
             .then(res => {
               if (res.data.status === 200) {
                 this.$message.success('修改成功');
@@ -328,7 +370,7 @@ export default {
             });
         } else {
           // 新增
-          request.post('admin/news/add', this.form)
+          request.post('admin/news/add', submitData)
             .then(res => {
               if (res.data.status === 200) {
                 this.$message.success('添加成功');
@@ -352,10 +394,10 @@ export default {
                 status: newStatus
             }
         }).then(res => {
-        if (res.data.status === 200) {
-            this.$message.success(`${action}成功！`);
-            this.loadNewsList();
-        }
+            if (res.data.status === 200) {
+                this.$message.success(`${action}成功！`);
+                this.loadNewsList();
+            }
         });
     },
     
@@ -408,10 +450,37 @@ export default {
     
     resetForm() {
       this.$refs.newsForm.resetFields();
+      this.isPreview = false;
     },
     
-    // ========== 图片上传相关方法 ==========
-    // 封面图片上传前验证
+    // 富文本编辑器相关方法
+    insertText(startTag, endTag) {
+      // 在光标位置插入HTML标签
+      const textarea = this.$el.querySelector('textarea');
+      const start = textarea.selectionStart;
+      const end = textarea.selectionEnd;
+      const selectedText = this.form.content.substring(start, end);
+      
+      // 插入标签
+      this.form.content = 
+        this.form.content.substring(0, start) + 
+        startTag + selectedText + endTag + 
+        this.form.content.substring(end);
+      
+      // 重新聚焦并设置光标位置
+      this.$nextTick(() => {
+        textarea.focus();
+        const newCursorPos = start + startTag.length + selectedText.length;
+        textarea.selectionStart = newCursorPos;
+        textarea.selectionEnd = newCursorPos;
+      });
+    },
+    
+    togglePreview() {
+      this.isPreview = !this.isPreview;
+    },
+    
+    // 图片上传相关方法
     beforeCoverUpload(file) {
       const isImage = file.type.startsWith('image/');
       const isLt2M = file.size / 1024 / 1024 < 2;
@@ -427,7 +496,6 @@ export default {
       return true;
     },
     
-    // 编辑器图片上传前验证
     beforeEditorUpload(file) {
       const isImage = file.type.startsWith('image/');
       const isLt5M = file.size / 1024 / 1024 < 5;
@@ -443,12 +511,8 @@ export default {
       return true;
     },
     
-    // 封面图片上传成功
-    handleCoverUploadSuccess(res, file, fileList) {
-    console.log('上传响应:', res);
-    
-    if (res && res.status === 200) {
-        // 获取图片URL
+    handleCoverUploadSuccess(res) {
+      if (res && res.status === 200) {
         let imageUrl = '';
         if (res.data && res.data.fileUrl) {
             imageUrl = res.data.fileUrl;
@@ -461,22 +525,16 @@ export default {
         if (imageUrl) {
             this.form.coverImage = imageUrl;
             this.$message.success(res.msg || '上传成功');
-            console.log('设置的图片URL:', imageUrl);
         } else {
-            console.warn('无法从响应中获取图片URL:', res);
             this.$message.error('上传成功但无法获取图片地址');
         }
-    } else {
-        this.$message.error('上传失败: ' + (res.msg || res.message || '未知错误'));
-    }
-},
+      } else {
+          this.$message.error('上传失败: ' + (res.msg || res.message || '未知错误'));
+      }
+    },
 
-// 编辑器图片上传成功
-handleEditorUploadSuccess(res, file, fileList) {
-    console.log('编辑器上传响应:', res);
-    
-    if (res && res.status === 200) {
-        // 获取图片URL
+    handleEditorUploadSuccess(res) {
+      if (res && res.status === 200) {
         let imageUrl = '';
         if (res.data && res.data.fileUrl) {
             imageUrl = res.data.fileUrl;
@@ -487,48 +545,38 @@ handleEditorUploadSuccess(res, file, fileList) {
         }
         
         if (imageUrl) {
-            // 插入图片到内容中
-            const imageTag = `<img src="${imageUrl}" alt="图片" style="max-width: 100%; margin: 10px 0;">`;
-            this.form.content += imageTag + '\n';
-            this.$message.success('图片上传成功，已插入到内容中');
+          // 获取当前textarea元素
+          const textarea = this.$el.querySelector('textarea');
+          const start = textarea.selectionStart;
+          const end = textarea.selectionEnd;
+          
+          // 在光标位置插入图片标签
+          const imageTag = `<img src="${imageUrl}" alt="图片" style="max-width: 100%; margin: 10px 0;">`;
+          
+          this.form.content = 
+            this.form.content.substring(0, start) + 
+            imageTag + 
+            this.form.content.substring(end);
+          
+          this.$message.success('图片上传成功，已插入到内容中');
         } else {
             this.$message.error('上传成功但无法获取图片地址');
         }
-    } else {
-        this.$message.error('上传失败: ' + (res.msg || res.message || '未知错误'));
-    }
-},
+      } else {
+          this.$message.error('上传失败: ' + (res.msg || res.message || '未知错误'));
+      }
+    },
     
-    // 上传失败处理
     handleUploadError(err) {
       console.error('上传失败:', err);
       this.$message.error('图片上传失败，请重试');
     },
     
-    // 删除封面图片
     removeCoverImage() {
       this.form.coverImage = '';
       this.$message.info('封面图片已清除');
     },
     
-    // 测试图片URL
-    testImageUrl() {
-      if (!this.form.coverImage) {
-        this.$message.warning('请输入图片URL');
-        return;
-      }
-      
-      const img = new Image();
-      img.onload = () => {
-        this.$message.success('图片URL有效');
-      };
-      img.onerror = () => {
-        this.$message.error('图片URL无效或无法访问');
-      };
-      img.src = this.form.coverImage;
-    },
-    
-    // 预览图片
     previewImage(url) {
       this.previewImageUrl = url;
       this.imagePreviewVisible = true;
@@ -622,21 +670,35 @@ handleEditorUploadSuccess(res, file, fileList) {
   margin-top: 5px;
 }
 
-/* 内容编辑器样式 */
+/* 富文本编辑器样式 */
 .content-editor {
   width: 100%;
 }
 
-.editor-tools {
-  margin-top: 10px;
-  display: flex;
-  align-items: center;
-  gap: 10px;
+.editor-toolbar {
+  border: 1px solid #dcdfe6;
+  border-bottom: none;
+  padding: 8px 10px;
+  background-color: #f5f7fa;
+  border-radius: 4px 4px 0 0;
 }
 
-.editor-tip {
-  font-size: 12px;
-  color: #999;
+.editor-toolbar .el-button {
+  margin-right: 5px;
+}
+
+.editor-preview {
+  border: 1px solid #dcdfe6;
+  border-top: none;
+  padding: 8px 10px;
+  border-radius: 0 0 4px 4px;
+}
+
+.preview-content {
+  margin-top: 10px;
+  padding: 10px;
+  border: 1px dashed #e4e7ed;
+  min-height: 100px;
 }
 
 /* 图片预览弹窗 */

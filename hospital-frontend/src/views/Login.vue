@@ -1,6 +1,3 @@
-<!--
- * 登录页
--->
 <template>
     <div class="login-index" :style="backgroundDiv">
         <!-- 侧边栏切换按钮 -->
@@ -16,87 +13,183 @@
                     <span class="news-title-text" v-show="!isSidebarCollapsed">医院资讯</span>
                 </div>
                 
+                <!-- 搜索框区域 -->
+                <div class="search-section" v-if="!isSidebarCollapsed">
+                    <div class="search-container">
+                        <el-input
+                            v-model="searchKeyword"
+                            placeholder="搜索资讯..."
+                            prefix-icon="el-icon-search"
+                            clearable
+                            @keyup.enter.native="performSearch"
+                            class="search-input"
+                            size="small"
+                        >
+                            <el-button
+                                slot="append"
+                                icon="el-icon-search"
+                                @click="performSearch"
+                                :loading="searchLoading"
+                            ></el-button>
+                        </el-input>
+                    </div>
+                </div>
+                
                 <!-- 加载状态 -->
                 <div v-if="loading && !isSidebarCollapsed" class="loading-container">
                     <i class="el-icon-loading"></i>
                     <span>正在加载资讯...</span>
                 </div>
                 
+                <!-- 搜索结果提示 -->
+                <div v-if="!loading && isSearchMode && !isSidebarCollapsed" class="search-results-info">
+                    <span class="result-count">
+                        找到 {{ searchResults.length }} 条相关资讯
+                        <span class="clear-search" @click="clearSearch" v-if="searchResults.length > 0">
+                            <i class="el-icon-close"></i> 清除搜索
+                        </span>
+                    </span>
+                </div>
+                
                 <!-- 无数据提示 -->
-                <div v-else-if="topNews.length === 0 && latestNews.length === 0 && !isSidebarCollapsed" class="empty-news">
+                <div v-else-if="topNews.length === 0 && latestNews.length === 0 && !isSidebarCollapsed && !isSearchMode" class="empty-news">
                     <i class="el-icon-news"></i>
                     <p>暂无资讯</p>
                 </div>
                 
+                <!-- 无搜索结果提示 -->
+                <div v-else-if="!loading && isSearchMode && searchResults.length === 0 && searchKeyword.trim() !== ''" class="empty-search">
+                    <i class="el-icon-search"></i>
+                    <p>未找到"{{ searchKeyword }}"相关的资讯</p>
+                    <p class="empty-tips">尝试其他关键词或查看最新资讯</p>
+                </div>
+                
                 <!-- 资讯内容 -->
-                <div v-else class="news-content" :class="{ collapsed: isSidebarCollapsed }">
+                <!-- 资讯内容（移除外层v-else，确保始终渲染） -->
+                <div class="news-content" :class="{ collapsed: isSidebarCollapsed }">
                     <!-- 收起时的简化显示 -->
                     <div v-if="isSidebarCollapsed" class="collapsed-view">
                         <div class="collapsed-count" @click="toggleSidebar">
                             <i class="el-icon-s-unfold"></i>
-                            <span class="count-badge" v-if="topNews.length > 0">{{ topNews.length }}</span>
+                            <span class="count-badge" v-if="totalNewsCount > 0">{{ totalNewsCount }}</span>
                         </div>
-                        <div class="collapsed-preview" @click="toggleSidebar">
-                            <i class="el-icon-news"></i>
-                            <span>资讯</span>
-                        </div>
+                    <div class="collapsed-preview" @click="toggleSidebar">
+                        <i class="el-icon-news"></i>
+                        <span>资讯</span>
                     </div>
-                    
-                    <!-- 展开时的完整显示 -->
-                    <div v-else class="expanded-content">
-                        <!-- 置顶资讯 -->
-                        <div class="top-news-section" v-if="topNews.length > 0">
-                            <div class="section-title">
-                                <i class="el-icon-star-on"></i>
-                                <span>置顶资讯</span>
-                            </div>
-                            <div class="top-news-list scrollable-container">
-                                <div class="top-news-item" 
-                                     v-for="item in topNews" 
-                                     :key="item.newsId"
-                                     @click="viewNewsDetail(item.newsId, item.coverImage)">
-                                    <!-- 添加封面图片显示 -->
-                                    <div class="news-cover" v-if="item.coverImage">
-                                        <img :src="item.coverImage" alt="封面" @click.stop="previewCoverImage(item.coverImage)">
-                                    </div>
-                                    <div class="top-tag">置顶</div>
-                                    <div class="news-title">{{ item.title }}</div>
-                                    <div class="news-info">
-                                        <span class="news-type">{{ item.newsType }}</span>
-                                        <span class="news-time">{{ formatTime(item.publishTime) }}</span>
-                                    </div>
-                                </div>
-                            </div>
+                </div>
+    
+    <!-- 展开时的完整显示 -->
+    <div v-else class="expanded-content">
+        <!-- 搜索结果（优先渲染） -->
+        <div v-if="isSearchMode && searchResults.length > 0">
+            <div class="search-results-section">
+                <div class="section-title">
+                    <i class="el-icon-search"></i>
+                    <span>搜索结果</span>
+                </div>
+                <div class="search-results-list scrollable-container">
+                    <div class="search-news-item" 
+                         v-for="item in searchResults" 
+                         :key="item.newsId"
+                         @click="viewNewsDetail(item.newsId, item.coverImage)">
+                        <div class="news-cover" v-if="item.coverImage">
+                            <img :src="item.coverImage" alt="封面" @click.stop="previewCoverImage(item.coverImage)">
                         </div>
-                        
-                        <!-- 最新资讯 -->
-                        <div class="latest-news-section">
-                            <div class="section-title">
-                                <i class="el-icon-time"></i>
-                                <span>最新资讯</span>
+                        <div class="item-content">
+                            <div class="news-title">
+                                <span v-html="highlightKeyword(item.title)"></span>
                             </div>
-                            <div class="latest-news-list scrollable-container">
-                                <div class="latest-news-item" 
-                                     v-for="item in latestNews" 
-                                     :key="item.newsId"
-                                     @click="viewNewsDetail(item.newsId, item.coverImage)">
-                                    <!-- 添加封面图片显示 -->
-                                    <div class="news-cover" v-if="item.coverImage">
-                                        <img :src="item.coverImage" alt="封面" @click.stop="previewCoverImage(item.coverImage)">
-                                    </div>
-                                    <div class="item-content">
-                                        <div class="news-title">{{ item.title }}</div>
-                                        <div class="news-meta">
-                                            <span class="news-type">{{ item.newsType }}</span>
-                                            <span class="news-time">{{ formatTime(item.publishTime) }}</span>
-                                            <!-- <span class="news-views">浏览: {{ item.viewCount || 0 }}</span> -->
-                                        </div>
-                                    </div>
-                                </div>
+                            <div class="news-meta">
+                                <span class="news-type">{{ item.newsType }}</span>
+                                <span class="news-time">{{ formatTime(item.publishTime) }}</span>
+                            </div>
+                            <div class="news-preview" v-if="item.content">
+                                <span v-html="highlightKeyword(truncateContent(item.content))"></span>
                             </div>
                         </div>
                     </div>
                 </div>
+            </div>
+        </div>
+        
+        <!-- 无搜索结果提示（搜索模式但无结果） -->
+        <div v-else-if="isSearchMode && searchResults.length === 0 && searchKeyword.trim() !== ''" class="empty-search">
+            <i class="el-icon-search"></i>
+            <p>未找到"{{ searchKeyword }}"相关的资讯</p>
+            <p class="empty-tips">尝试其他关键词或查看最新资讯</p>
+        </div>
+        
+        <!-- 正常显示（非搜索模式） -->
+        <div v-else>
+            <!-- 加载状态 -->
+            <div v-if="loading" class="loading-container">
+                <i class="el-icon-loading"></i>
+                <span>正在加载资讯...</span>
+            </div>
+            
+            <!-- 无数据提示（非搜索模式且无资讯） -->
+            <div v-else-if="topNews.length === 0 && latestNews.length === 0" class="empty-news">
+                <i class="el-icon-news"></i>
+                <p>暂无资讯</p>
+            </div>
+            
+            <!-- 有数据时显示（非搜索模式） -->
+            <div v-else>
+                <!-- 置顶资讯 -->
+                <div class="top-news-section" v-if="topNews.length > 0">
+                    <div class="section-title">
+                        <i class="el-icon-star-on"></i>
+                        <span>置顶资讯</span>
+                    </div>
+                    <div class="top-news-list scrollable-container">
+                        <div class="top-news-item" 
+                             v-for="item in topNews" 
+                             :key="item.newsId"
+                             @click="viewNewsDetail(item.newsId, item.coverImage)">
+                            <div class="news-cover" v-if="item.coverImage">
+                                <img :src="item.coverImage" alt="封面" @click.stop="previewCoverImage(item.coverImage)">
+                            </div>
+                            <div class="top-tag">置顶</div>
+                            <div class="news-title">{{ item.title }}</div>
+                            <div class="news-info">
+                                <span class="news-type">{{ item.newsType }}</span>
+                                <span class="news-time">{{ formatTime(item.publishTime) }}</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- 最新资讯 -->
+                <!-- 最新资讯 -->
+<div class="latest-news-section">
+  <div class="section-title">
+    <i class="el-icon-time"></i>
+    <span>最新资讯</span>
+  </div>
+  <!-- 关键：添加 scrollable-container 类以复用通用滚动条样式 -->
+  <div class="latest-news-list scrollable-container">
+    <div class="latest-news-item" 
+         v-for="item in latestNews" 
+         :key="item.newsId"
+         @click="viewNewsDetail(item.newsId, item.coverImage)">
+      <div class="news-cover" v-if="item.coverImage">
+        <img :src="item.coverImage" alt="封面" @click.stop="previewCoverImage(item.coverImage)">
+      </div>
+      <div class="item-content">
+        <div class="news-title">{{ item.title }}</div>
+        <div class="news-meta">
+          <span class="news-type">{{ item.newsType }}</span>
+          <span class="news-time">{{ formatTime(item.publishTime) }}</span>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+            </div>
+        </div>
+    </div>
+</div>
             </div>
         </div>
 
@@ -260,7 +353,7 @@
                 
                 <div class="news-detail-main">
                     <div class="news-detail-header">
-                        <h2 class="news-detail-title">{{ currentNews.title }}</h2>
+                        <!-- <h2 class="news-detail-title">{{ currentNews.title }}</h2> -->
                         <div class="news-detail-meta">
                             <span class="meta-item">
                                 <i class="el-icon-price-tag"></i>
@@ -270,10 +363,6 @@
                                 <i class="el-icon-time"></i>
                                 发布时间: {{ formatDetailTime(currentNews.publishTime) }}
                             </span>
-                            <!-- <span class="meta-item">
-                                <i class="el-icon-view"></i>
-                                浏览量: {{ currentNews.viewCount || 0 }}
-                            </span> -->
                         </div>
                     </div>
                     <div class="news-detail-content-wrapper">
@@ -281,9 +370,6 @@
                     </div>
                 </div>
             </div>
-            <!-- <span slot="footer">
-                <el-button @click="newsDetailVisible = false">关闭</el-button>
-            </span> -->
         </el-dialog>
     </div>
 </template>
@@ -291,6 +377,7 @@
 <script>
 import request from "@/utils/request.js";
 import { setToken } from "@/utils/storage.js";
+
 export default {
     name: "Login",
     data() {
@@ -336,6 +423,7 @@ export default {
             }
         };
         return {
+            searchLoading: false,
             // 背景图片
             backgroundDiv: {
                 backgroundImage: "url(" + require("../assets/background.png") + ")",
@@ -452,8 +540,8 @@ export default {
                 ],
             },
             
-            // 新增资讯相关数据
-            showNews: true, // 控制是否显示资讯
+            // 资讯相关数据
+            showNews: true,
             loading: false,
             topNews: [],
             latestNews: [],
@@ -462,15 +550,37 @@ export default {
             
             // 侧边栏状态
             isSidebarCollapsed: false,
+            
+            // 新增搜索相关数据
+            searchKeyword: "",
+            searchResults: [],
+            isSearchMode: false,
+            showSearchHint: false,
+            searchTimer: null,
+            totalNewsCount: 0,
         };
     },
     mounted() {
         this.loadNews();
+        
+        // 监听搜索框显示提示
+        setTimeout(() => {
+            this.showSearchHint = true;
+        }, 1000);
+    },
+    computed: {
+        allNews() {
+            return [...this.topNews, ...this.latestNews];
+        }
     },
     methods: {
         // 切换侧边栏状态
         toggleSidebar() {
             this.isSidebarCollapsed = !this.isSidebarCollapsed;
+            // 如果从收起状态展开，并且正在搜索，清除搜索
+            if (!this.isSidebarCollapsed && this.searchKeyword.trim() === "") {
+                this.clearSearch();
+            }
         },
         
         // 加载资讯
@@ -496,18 +606,82 @@ export default {
                 } else {
                     this.latestNews = [];
                 }
+                
+                // 计算总资讯数
+                this.totalNewsCount = this.topNews.length + this.latestNews.length;
             })
             .catch(error => {
                 console.error('加载资讯失败:', error);
                 this.topNews = [];
                 this.latestNews = [];
+                this.totalNewsCount = 0;
             })
             .finally(() => {
                 this.loading = false;
             });
         },
         
-        // 查看资讯详情（现在包含封面图片）
+        // 执行搜索
+        performSearch() {
+            const keyword = this.searchKeyword.trim();
+            if (keyword === "") {
+                this.clearSearch();
+                return;
+            }
+            
+            this.loading = true;
+            this.isSearchMode = true;
+            
+            // 调用后端搜索接口
+            request.get("news/search", {
+                params: {
+                    keyword: keyword,
+                    pageNumber: 1,
+                    size: 20
+                }
+            })
+            .then(res => {
+                console.log('搜索结果数据:', res.data.data.records);
+                if (res.data && res.data.status === 200) {
+                    this.searchResults = res.data.data.records || [];
+                } else {
+                    this.searchResults = [];
+                }
+                this.loading = false;
+            })
+            .catch(error => {
+                console.error('搜索资讯失败:', error);
+                this.searchResults = [];
+                this.loading = false;
+            });
+            
+        },
+        
+        clearSearch() {
+            this.searchKeyword = "";
+            this.searchResults = [];
+            this.isSearchMode = false;
+            this.searchTimer = null;
+        },
+        
+        // 高亮关键词
+        highlightKeyword(text) {
+            if (!text || !this.searchKeyword.trim()) return text;
+            
+            const keyword = this.searchKeyword.trim();
+            const regex = new RegExp(`(${keyword})`, 'gi');
+            return text.toString().replace(regex, '<span class="highlight">$1</span>');
+        },
+        
+        // 截取内容预览
+        truncateContent(content, length = 60) {
+            if (!content) return '';
+            // 移除HTML标签
+            const plainText = content.replace(/<[^>]+>/g, '');
+            return plainText.length > length ? plainText.substring(0, length) + '...' : plainText;
+        },
+        
+        // 查看资讯详情
         viewNewsDetail(newsId, coverImage) {
             console.log('查看资讯详情:', newsId);
             request.get(`news/detail/${newsId}`)
@@ -534,7 +708,7 @@ export default {
                 });
         },
 
-        // 预览封面图片（现在不再需要单独弹窗）
+        // 预览封面图片
         previewCoverImage(imageUrl) {
             if (!imageUrl) return;
             // 现在直接展示在资讯详情中，不需要单独弹窗
@@ -882,8 +1056,8 @@ export default {
             display: flex;
             align-items: center;
             justify-content: center;
-            margin-bottom: 25px;
-            padding-bottom: 20px;
+            margin-bottom: 15px;
+            padding-bottom: 15px;
             border-bottom: 2px solid rgba(231, 92, 9, 0.7);
             transition: all 0.3s;
             
@@ -901,6 +1075,135 @@ export default {
                 letter-spacing: 1px;
                 white-space: nowrap;
                 transition: all 0.3s;
+            }
+        }
+        
+        /* ==================== 搜索区域样式 ==================== */
+        .search-section {
+            margin-bottom: 20px;
+            flex-shrink: 0;
+            
+            .search-container {
+                position: relative;
+                
+                .search-input {
+                    width: 100%;
+                    
+                    .el-input__inner {
+                        background: rgba(255, 255, 255, 0.9);
+                        border: 1px solid rgba(231, 92, 9, 0.3);
+                        border-radius: 20px;
+                        padding-left: 40px;
+                        transition: all 0.3s;
+                        
+                        &:focus {
+                            border-color: #e75c09;
+                            box-shadow: 0 0 0 2px rgba(231, 92, 9, 0.1);
+                        }
+                    }
+                    
+                    .el-input__prefix {
+                        left: 12px;
+                        
+                        i {
+                            color: #e75c09;
+                        }
+                    }
+                    
+                    .el-input__suffix {
+                        .el-input__clear {
+                            color: #e75c09;
+                        }
+                    }
+                }
+                
+                .search-hint {
+                    margin-top: 8px;
+                    font-size: 12px;
+                    color: #999;
+                    display: flex;
+                    align-items: center;
+                    animation: fadeIn 0.5s ease-out;
+                    
+                    i {
+                        margin-right: 5px;
+                        font-size: 14px;
+                    }
+                    
+                    span {
+                        opacity: 0.8;
+                    }
+                }
+            }
+        }
+        
+        /* 搜索结果信息 */
+        .search-results-info {
+            margin: 10px 0;
+            padding: 10px 15px;
+            background: rgba(64, 158, 255, 0.08);
+            border-radius: 8px;
+            flex-shrink: 0;
+            animation: slideDown 0.3s ease-out;
+            
+            .result-count {
+                display: flex;
+                justify-content: space-between;
+                align-items: center;
+                font-size: 14px;
+                color: #409eff;
+                
+                .clear-search {
+                    display: flex;
+                    align-items: center;
+                    cursor: pointer;
+                    color: #999;
+                    font-size: 12px;
+                    transition: all 0.2s;
+                    
+                    &:hover {
+                        color: #ff5722;
+                        
+                        i {
+                            transform: rotate(90deg);
+                        }
+                    }
+                    
+                    i {
+                        margin-right: 4px;
+                        font-size: 12px;
+                        transition: transform 0.2s;
+                    }
+                }
+            }
+        }
+        
+        /* 无搜索结果提示 */
+        .empty-search {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            height: 200px;
+            color: #999;
+            animation: fadeIn 0.5s ease-out;
+            
+            i {
+                font-size: 48px;
+                margin-bottom: 15px;
+                color: #ddd;
+            }
+            
+            p {
+                font-size: 16px;
+                margin: 5px 0;
+                text-align: center;
+                
+                &.empty-tips {
+                    font-size: 14px;
+                    color: #bbb;
+                    margin-top: 10px;
+                }
             }
         }
         
@@ -997,9 +1300,149 @@ export default {
             scrollbar-color: rgba(0, 0, 0, 0.2) rgba(0, 0, 0, 0.05);
         }
         
+        /* ==================== 搜索结果样式 ==================== */
+        .search-results-section {
+            flex: 1;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+            
+            .section-title {
+                display: flex;
+                align-items: center;
+                margin-bottom: 15px;
+                font-size: 17px;
+                font-weight: bold;
+                color: #333;
+                padding-right: 10px;
+                flex-shrink: 0;
+                
+                i {
+                    color: #409eff;
+                    margin-right: 10px;
+                    font-size: 18px;
+                }
+                
+                span {
+                    color: #333;
+                }
+            }
+            
+            .search-results-list {
+                flex: 1;
+                min-height: 200px;
+                
+                .search-news-item {
+                    display: flex;
+                    padding: 16px;
+                    margin-bottom: 12px;
+                    background: rgba(255, 255, 255, 0.95);
+                    border-radius: 8px;
+                    box-shadow: 0 3px 10px rgba(0, 0, 0, 0.08);
+                    cursor: pointer;
+                    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+                    border: 1px solid rgba(64, 158, 255, 0.1);
+                    backdrop-filter: blur(5px);
+                    margin-right: 2px;
+                    
+                    &:hover {
+                        transform: translateX(5px) translateY(-2px);
+                        box-shadow: 0 6px 20px rgba(64, 158, 255, 0.2);
+                        background: rgba(255, 255, 255, 1);
+                        border-color: rgba(64, 158, 255, 0.3);
+                    }
+                    
+                    .news-cover {
+                        width: 100px;
+                        height: 75px;
+                        margin-right: 15px;
+                        border-radius: 6px;
+                        overflow: hidden;
+                        flex-shrink: 0;
+                        
+                        img {
+                            width: 100%;
+                            height: 100%;
+                            object-fit: cover;
+                            transition: transform 0.3s;
+                            cursor: pointer;
+                            
+                            &:hover {
+                                transform: scale(1.05);
+                            }
+                        }
+                    }
+                    
+                    .item-content {
+                        flex: 1;
+                        min-width: 0;
+                        
+                        .news-title {
+                            font-size: 15px;
+                            font-weight: 600;
+                            color: #333;
+                            margin-bottom: 10px;
+                            line-height: 1.4;
+                            
+                            .highlight {
+                                background-color: #ffeb3b;
+                                color: #333;
+                                padding: 0 2px;
+                                border-radius: 2px;
+                                font-weight: bold;
+                            }
+                        }
+                        
+                        .news-meta {
+                            display: flex;
+                            justify-content: space-between;
+                            font-size: 12px;
+                            color: #666;
+                            margin-bottom: 8px;
+                            
+                            .news-type {
+                                background: rgba(64, 158, 255, 0.1);
+                                padding: 4px 10px;
+                                border-radius: 12px;
+                                color: #409eff;
+                                font-weight: 500;
+                                white-space: nowrap;
+                            }
+                            
+                            .news-time {
+                                opacity: 0.8;
+                                white-space: nowrap;
+                            }
+                        }
+                        
+                        .news-preview {
+                            font-size: 13px;
+                            color: #666;
+                            line-height: 1.5;
+                            margin-top: 5px;
+                            overflow: hidden;
+                            text-overflow: ellipsis;
+                            display: -webkit-box;
+                            -webkit-line-clamp: 2;
+                            -webkit-box-orient: vertical;
+                            
+                            .highlight {
+                                background-color: #ffeb3b;
+                                color: #333;
+                                padding: 0 2px;
+                                border-radius: 2px;
+                                font-weight: bold;
+                            }
+                        }
+                    }
+                }
+            }
+        }
+        
         .top-news-section {
             margin-bottom: 25px;
             flex-shrink: 0;
+            overflow: hidden;
             
             .section-title {
                 display: flex;
@@ -1022,8 +1465,11 @@ export default {
             }
             
             .top-news-list {
+                
                 max-height: 280px;
                 min-height: 100px;
+                overflow-x: hidden;
+                padding-right: 10px; /* 预留滚动条空间，避免内容被遮挡 */
                 
                 .top-news-item {
                     position: relative;
@@ -1113,7 +1559,7 @@ export default {
             overflow: hidden;
             display: flex;
             flex-direction: column;
-            
+            max-height: 420px;
             .section-title {
                 display: flex;
                 align-items: center;
@@ -1121,111 +1567,109 @@ export default {
                 font-size: 17px;
                 font-weight: bold;
                 color: #333;
-                padding-right: 10px;
-                flex-shrink: 0;
-                
-                i {
-                    color: #409eff;
-                    margin-right: 10px;
-                    font-size: 18px;
-                }
-                
-                span {
-                    color: #333;
-                }
+                 padding-right: 10px;
+                flex-shrink: 0;  /* 固定标题不滚动 */
+    
+            i {
+                color: #409eff;
+                margin-right: 10px;
+                font-size: 18px;
             }
-            
-            .latest-news-list {
-                flex: 1;
-                min-height: 200px;
-                
-                .latest-news-item {
-                    display: flex;
-                    padding: 14px;
-                    margin-bottom: 10px;
-                    background: rgba(255, 255, 255, 0.9);
-                    border-radius: 6px;
-                    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
-                    cursor: pointer;
-                    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-                    border: 1px solid rgba(255, 255, 255, 0.2);
-                    backdrop-filter: blur(5px);
-                    margin-right: 2px;
-                    
-                    &:hover {
-                        transform: translateX(5px);
-                        box-shadow: 0 5px 15px rgba(0, 0, 0, 0.15);
-                        background: rgba(255, 255, 255, 1);
-                        border-color: rgba(64, 158, 255, 0.3);
-                    }
-                    
-                    .news-cover {
-                        width: 80px;
-                        height: 60px;
-                        margin-right: 12px;
-                        border-radius: 4px;
-                        overflow: hidden;
-                        flex-shrink: 0;
-                        
-                        img {
-                            width: 100%;
-                            height: 100%;
-                            object-fit: cover;
-                            transition: transform 0.3s;
-                            cursor: pointer;
-                            
-                            &:hover {
-                                transform: scale(1.05);
-                            }
-                        }
-                    }
-                    
-                    .item-content {
-                        flex: 1;
-                        min-width: 0; /* 防止内容溢出 */
-                        
-                        .news-title {
-                            font-size: 14px;
-                            font-weight: 500;
-                            color: #333;
-                            margin-bottom: 8px;
-                            line-height: 1.4;
-                            overflow: hidden;
-                            text-overflow: ellipsis;
-                            display: -webkit-box;
-                            -webkit-line-clamp: 2;
-                            -webkit-box-orient: vertical;
-                        }
-                        
-                        .news-meta {
-                            display: flex;
-                            justify-content: space-between;
-                            font-size: 12px;
-                            color: #666;
-                            
-                            .news-type {
-                                background: rgba(64, 158, 255, 0.1);
-                                padding: 4px 8px;
-                                border-radius: 4px;
-                                color: #409eff;
-                                font-weight: 500;
-                                white-space: nowrap;
-                            }
-                            
-                            .news-time {
-                                opacity: 0.8;
-                                white-space: nowrap;
-                            }
-                            
-                            .news-views {
-                                opacity: 0.8;
-                                white-space: nowrap;
-                            }
-                        }
-                    }
-                }
+    
+            span {
+                color: #333;
             }
+            }
+  
+  .latest-news-list {
+    flex: 1;  /* 占满剩余空间 */
+    min-height: 200px;  /* 确保容器有最小高度 */
+    overflow-x: hidden; /* 隐藏水平滚动条 */
+    padding-right: 10px; /* 预留滚动条空间，避免内容被遮挡 */
+    /* 复用通用滚动条样式（通过 scrollable-container 类），无需重复定义 */
+    
+    .latest-news-item {
+      display: flex;
+      padding: 14px;
+      margin-bottom: 10px;
+      background: rgba(255, 255, 255, 0.9);
+      border-radius: 6px;
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+      cursor: pointer;
+      transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+      border: 1px solid rgba(255, 255, 255, 0.2);
+      backdrop-filter: blur(5px);
+      margin-right: 2px;
+      
+      &:hover {
+        transform: translateX(5px);
+        box-shadow: 0 5px 15px rgba(0, 0, 0, 0.15);
+        background: rgba(255, 255, 255, 1);
+        border-color: rgba(64, 158, 255, 0.3);
+      }
+      
+      .news-cover {
+        width: 80px;
+        height: 60px;
+        margin-right: 12px;
+        border-radius: 4px;
+        overflow: hidden;
+        flex-shrink: 0;  /* 固定图片尺寸不压缩 */
+        
+        img {
+          width: 100%;
+          height: 100%;
+          object-fit: cover;
+          transition: transform 0.3s;
+          cursor: pointer;
+          
+          &:hover {
+            transform: scale(1.05);
+          }
         }
+      }
+      
+      .item-content {
+        flex: 1;
+        min-width: 0;  /* 防止内容溢出容器 */
+        
+        .news-title {
+          font-size: 14px;
+          font-weight: 500;
+          color: #333;
+          margin-bottom: 8px;
+          line-height: 1.4;
+          overflow: hidden;
+          text-overflow: ellipsis;
+          display: -webkit-box;
+          -webkit-line-clamp: 2;  /* 最多显示2行 */
+          -webkit-box-orient: vertical;
+        }
+        
+        .news-meta {
+          display: flex;
+          justify-content: space-between;
+          font-size: 12px;
+          color: #666;
+          
+          .news-type {
+            background: rgba(64, 158, 255, 0.1);
+            padding: 4px 8px;
+            border-radius: 4px;
+            color: #409eff;
+            font-weight: 500;
+            white-space: nowrap;  /* 防止类型文字换行 */
+          }
+          
+          .news-time {
+            opacity: 0.8;
+            white-space: nowrap;  /* 防止时间文字换行 */
+          }
+        }
+      }
+    }
+  }
+}
     }
 }
 
@@ -1303,6 +1747,35 @@ export default {
     }
 }
 
+/* 1. 修改弹窗容器的CSS（.news-detail-dialog） */
+.news-detail-dialog {
+    /* 磨砂玻璃效果 */
+    backdrop-filter: blur(10px) !important;
+    -webkit-backdrop-filter: blur(10px) !important;
+    background: rgba(255, 255, 255, 0.85) !important;
+    
+    /* 卡片阴影 */
+    border-radius: 16px !important;
+    overflow: hidden !important;
+    box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25) !important;
+    border: 1px solid rgba(255, 255, 255, 0.3) !important;
+    
+    /* 内容加载动画 */
+    animation: dialogFadeIn 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* 渐变色标题栏 */
+.news-detail-dialog .el-dialog__header {
+    background: linear-gradient(135deg, #e75c09 0%, #ff9800 100%) !important;
+    padding: 20px 30px 10px !important;
+}
+
+.news-detail-dialog .el-dialog__title {
+    color: white !important;
+    font-size: 20px !important;
+    font-weight: 600 !important;
+}
+
 .news-detail {
     display: flex;
     flex-direction: column;
@@ -1327,6 +1800,11 @@ export default {
             object-fit: contain;
             border-radius: 0;
             box-shadow: 0 5px 25px rgba(0, 0, 0, 0.1);
+            transition: transform 0.6s ease;
+            
+            &:hover {
+                transform: scale(1.03);
+            }
         }
     }
     
@@ -1366,10 +1844,16 @@ export default {
                     display: flex;
                     align-items: center;
                     font-size: 14px;
+                    transition: all 0.3s;
+                    
+                    &:hover i {
+                        transform: scale(1.1);
+                    }
                     
                     i {
                         margin-right: 6px;
                         font-size: 16px;
+                        transition: all 0.3s;
                     }
                     
                     &:nth-child(1) i {
@@ -1395,34 +1879,56 @@ export default {
             background: rgba(250, 250, 250, 0.8);
             border: 1px solid rgba(0, 0, 0, 0.08);
             
-            /* 内容区域滚动条 */
+            /* 3. 自定义滚动条 - 橙色渐变 */
             &::-webkit-scrollbar {
-                width: 8px;
+                width: 10px;
+                background-color: transparent;
             }
             
             &::-webkit-scrollbar-track {
-                background-color: rgba(0, 0, 0, 0.05);
-                border-radius: 4px;
+                background-color: rgba(231, 92, 9, 0.05);
+                border-radius: 5px;
+                margin: 5px 0;
             }
             
             &::-webkit-scrollbar-thumb {
-                background-color: rgba(0, 0, 0, 0.15);
-                border-radius: 4px;
+                background: linear-gradient(135deg, #e75c09, #ff9800);
+                border-radius: 5px;
+                box-shadow: inset 0 2px 5px rgba(255, 255, 255, 0.3);
+                border: 2px solid transparent;
+                background-clip: content-box;
+                transition: all 0.3s;
                 
                 &:hover {
-                    background-color: rgba(0, 0, 0, 0.25);
+                    background: linear-gradient(135deg, #d35400, #f57c00);
                 }
             }
+            
+            /* Firefox滚动条 */
+            scrollbar-width: thin;
+            scrollbar-color: #e75c09 rgba(231, 92, 9, 0.1);
         }
-        
+
+        /* 4. 精美排版 */
         .news-detail-content {
             line-height: 1.8;
             font-size: 16px;
             color: #333;
             
             p {
-                margin-bottom: 16px;
+                margin-bottom: 20px;
                 text-align: justify;
+                position: relative;
+                padding-left: 20px;
+                
+                &::before {
+                    content: '•';
+                    color: #e75c09;
+                    font-weight: bold;
+                    position: absolute;
+                    left: 0;
+                    top: 0;
+                }
             }
             
             img {
@@ -1430,14 +1936,39 @@ export default {
                 height: auto;
                 display: block;
                 margin: 15px auto;
-                border-radius: 6px;
-                box-shadow: 0 3px 10px rgba(0, 0, 0, 0.1);
+                border-radius: 10px;
+                box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15);
+                border: 3px solid white;
+                transition: all 0.3s ease;
+                
+                &:hover {
+                    transform: translateY(-3px);
+                    box-shadow: 0 12px 30px rgba(0, 0, 0, 0.2);
+                }
             }
             
             h1, h2, h3, h4 {
-                margin: 20px 0 15px 0;
+                margin: 30px 0 20px 0;
                 color: #333;
-                font-weight: 600;
+                font-weight: 700;
+                position: relative;
+                padding-bottom: 10px;
+                
+                &::after {
+                    content: '';
+                    position: absolute;
+                    bottom: 0;
+                    left: 0;
+                    width: 60px;
+                    height: 3px;
+                    background: linear-gradient(to right, #e75c09, #ff9800);
+                    border-radius: 1.5px;
+                    transition: width 0.3s ease;
+                }
+                
+                &:hover::after {
+                    width: 100px;
+                }
             }
             
             ul, ol {
@@ -1459,15 +1990,37 @@ export default {
             }
             
             blockquote {
-                border-left: 4px solid #409eff;
-                margin: 20px 0;
-                padding: 10px 20px;
-                background: rgba(64, 158, 255, 0.05);
-                border-radius: 0 6px 6px 0;
+                border-left: 5px solid #e75c09;
+                margin: 30px 0;
+                padding: 25px 30px;
+                background: rgba(231, 92, 9, 0.05);
+                border-radius: 0 10px 10px 0;
                 font-style: italic;
+                font-size: 18px;
+                color: #555;
             }
         }
     }
+}
+
+/* 2. 修改内容区域的CSS（.news-detail） */
+.news-detail {
+    /* 磨砂玻璃效果 */
+    background: rgba(255, 255, 255, 0.9);
+    backdrop-filter: blur(15px);
+    -webkit-backdrop-filter: blur(15px);
+    
+    /* 内容加载动画 */
+    animation: contentFadeIn 0.6s ease-out 0.2s both;
+}
+
+/* 卡片阴影 */
+.news-detail-main {
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+    border-radius: 12px;
+    margin: 0px 20px 20px 20px;
+    position: relative;
+    z-index: 3;
 }
 
 /* ==================== 响应式调整 ==================== */
@@ -1513,7 +2066,7 @@ export default {
         position: relative;
         width: 100%;
         max-width: 500px;
-        height: 500px;
+        height: 550px;
         margin-bottom: 30px;
         backdrop-filter: none;
         margin-top: 20px;
@@ -1573,7 +2126,7 @@ export default {
 
 @media (max-width: 768px) {
     .news-sidebar {
-        height: 450px;
+        height: 500px;
         
         &.collapsed {
             height: 100px;
@@ -1585,6 +2138,10 @@ export default {
             .top-news-list {
                 max-height: 220px;
             }
+            
+            .search-section {
+                margin-bottom: 15px;
+            }
         }
     }
     
@@ -1592,7 +2149,8 @@ export default {
         height: 370px;
     }
     
-    .latest-news-item {
+    .latest-news-item,
+    .search-news-item {
         flex-direction: column;
         
         .news-cover {
@@ -1637,6 +2195,17 @@ export default {
     }
 }
 
+@keyframes slideDown {
+    from {
+        transform: translateY(-10px);
+        opacity: 0;
+    }
+    to {
+        transform: translateY(0);
+        opacity: 1;
+    }
+}
+
 @keyframes spin {
     0% {
         transform: rotate(0deg);
@@ -1657,6 +2226,29 @@ export default {
     }
 }
 
+/* 6. 动画效果 */
+@keyframes dialogFadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(-30px) scale(0.95);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0) scale(1);
+    }
+}
+
+@keyframes contentFadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(20px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
 .news-sidebar {
     animation: slideIn 0.6s cubic-bezier(0.4, 0, 0.2, 1);
 }
@@ -1665,20 +2257,7 @@ export default {
     animation: fadeIn 0.3s ease-out;
 }
 
-/* 原有的其他样式 */
-.view-more {
-    text-align: center;
-    padding: 16px;
-    color: #409eff;
-    cursor: pointer;
-    font-weight: 500;
-    border-top: 1px solid rgba(0, 0, 0, 0.08);
-    margin-top: 20px;
-    transition: all 0.3s;
-    
-    &:hover {
-        color: #337ecc;
-        background: rgba(64, 158, 255, 0.05);
-    }
+.search-results-info {
+    animation: slideDown 0.3s ease-out;
 }
 </style>

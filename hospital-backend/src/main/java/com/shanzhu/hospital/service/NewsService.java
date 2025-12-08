@@ -9,6 +9,9 @@ import java.util.List;
 
 public interface NewsService {
 
+    // 搜索资讯
+    NewsPageVo searchNews(Integer pageNum, Integer pageSize, String keyword);
+
     // 管理员端：分页查询
     NewsPageVo findNewsPages(Integer pageNum, Integer pageSize, String query, Integer status);
 
