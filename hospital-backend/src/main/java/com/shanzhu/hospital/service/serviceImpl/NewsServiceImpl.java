@@ -80,6 +80,28 @@ public class NewsServiceImpl extends ServiceImpl<NewsMapper, News> implements Ne
     }
 
     @Override
+    public NewsPageVo searchNews(Integer pageNum, Integer pageSize, String keyword) {
+        Page<News> page = new Page<>(pageNum, pageSize);
+
+        LambdaQueryWrapper<News> queryWrapper = Wrappers.<News>lambdaQuery()
+                .eq(News::getStatus, 1)  // 只查询已发布的
+                .and(wrapper -> wrapper
+                        .like(News::getTitle, keyword)
+                        .or()
+                        .like(News::getContent, keyword)
+                )
+                .orderByDesc(News::getIsTop)
+                .orderByDesc(News::getPublishTime);
+
+        IPage<News> iPage = this.page(page, queryWrapper);
+
+        NewsPageVo pageVo = new NewsPageVo();
+        pageVo.populatePage(iPage);
+
+        return pageVo;
+    }
+
+    @Override
     public List<NewsVo> getTopNews(Integer limit) {
         List<News> newsList = newsMapper.selectTopNews(limit);
         return convertToVoList(newsList);
