@@ -34,6 +34,19 @@ spring:
   mvc:
     static-path-pattern: /uploads/**
 
+  # 邮件配置
+  mail:
+    host: smtp.163.com
+    port: 25
+    username: 17180631819@163.com
+    password: ZHxW7xYssmaj8qKs
+    properties:
+      mail:
+        smtp:
+          auth: true
+          starttls:
+            enable: true
+
 # 自定义配置
 file:
   upload:
@@ -46,18 +59,15 @@ mybatis-plus:
   configuration:
     map-underscore-to-camel-case: true
 
+# 大语言模型配置
+llm:
+  api:
+    key: sk-TMe6dYqpxvJgQXfK82mhCpqPcOcxzMVjr3EylpcfowuKipR1
+    url: https://api.chatanywhere.tech/v1/chat/completions
+  model: gpt-3.5-turbo
+
 # Swagger配置
-springdoc:
-  api-docs:
-    path: /api-docs
-  swagger-ui:
-    path: /swagger-ui.html
-  packages-to-scan: com.shanzhu.hospital.controller
-  openapi:
-    info:
-      title: 医院管理系统 API文档
-      description: 医院管理系统的 API documentation
-      version: 1.0.0
-      contact:
-        name: 开发者
-        email: dev@example.com
+springfox:
+  documentation:
+    swagger-ui:
+      base-url: /

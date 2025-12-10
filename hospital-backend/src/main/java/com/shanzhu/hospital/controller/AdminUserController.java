@@ -10,6 +10,9 @@ import com.shanzhu.hospital.service.AdminUserService;
 import com.shanzhu.hospital.service.DoctorUserService;
 import com.shanzhu.hospital.service.OrderService;
 import com.shanzhu.hospital.service.PatientUserService;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import org.apache.commons.lang3.BooleanUtils;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -25,6 +28,7 @@ import org.springframework.web.bind.annotation.RestController;
 @RestController
 @RequestMapping("admin")
 @RequiredArgsConstructor
+@Tag(name = "管理员接口", description = "管理员相关操作接口")
 public class AdminUserController {
 
     private final AdminUserService adminService;
@@ -43,7 +47,9 @@ public class AdminUserController {
      * @return 返回管理员登录信息
      */
     @PostMapping("/login")
-    public R<AdminUserVo> login(@RequestParam("aId") int aId, @RequestParam("aPassword") String aPassword) {
+    @Operation(summary = "管理员登录", description = "使用管理员账号和密码进行登录")
+    public R<AdminUserVo> login(@Parameter(description = "管理员ID") @RequestParam("aId") int aId, 
+                                @Parameter(description = "管理员密码") @RequestParam("aPassword") String aPassword) {
         //登录管理员
         AdminUserVo adminVo = adminService.login(aId, aPassword);
 
@@ -63,10 +69,11 @@ public class AdminUserController {
      * @return 医护人员信息
      */
     @RequestMapping("findAllDoctors")
+    @Operation(summary = "分页查询所有医生", description = "根据页码和查询条件分页查询医生信息")
     public R<DoctorPageVo> findDoctorPage(
-            @RequestParam(value = "pageNumber") Integer pageNum,
-            @RequestParam(value = "size") Integer pageSize,
-            @RequestParam(value = "query") String query
+            @Parameter(description = "页码") @RequestParam(value = "pageNumber") Integer pageNum,
+            @Parameter(description = "每页数量") @RequestParam(value = "size") Integer pageSize,
+            @Parameter(description = "查询关键字") @RequestParam(value = "query") String query
     ) {
         return R.ok(doctorUserService.findDoctorPage(pageNum, pageSize, query));
     }
@@ -78,7 +85,8 @@ public class AdminUserController {
      * @return 医生信息
      */
     @RequestMapping("findDoctor")
-    public R<Doctor> findDoctor(@RequestParam(value = "dId") int dId) {
+    @Operation(summary = "根据ID查询医生", description = "通过医生ID查询医生详细信息")
+    public R<Doctor> findDoctor(@Parameter(description = "医生ID") @RequestParam(value = "dId") int dId) {
         return R.ok(doctorUserService.findDoctor(dId));
     }
 
@@ -89,7 +97,8 @@ public class AdminUserController {
      * @return 结果
      */
     @RequestMapping("addDoctor")
-    public R addDoctor(Doctor doctor) {
+    @Operation(summary = "添加医生", description = "添加新的医生信息")
+    public R addDoctor(@Parameter(description = "医生信息对象") Doctor doctor) {
         if (BooleanUtils.isTrue(doctorUserService.addDoctor(doctor))) {
             return R.ok("添加医生成功");
         }
@@ -104,7 +113,8 @@ public class AdminUserController {
      * @return 结果
      */
     @RequestMapping("deleteDoctor")
-    public R deleteDoctor(@RequestParam(value = "dId") int dId) {
+    @Operation(summary = "删除医生", description = "逻辑删除医生，将医生状态设置为离职")
+    public R deleteDoctor(@Parameter(description = "医生ID") @RequestParam(value = "dId") int dId) {
         if (BooleanUtils.isTrue(doctorUserService.deleteDoctor(dId))) {
             return R.ok("删除医生成功");
         }
@@ -119,7 +129,8 @@ public class AdminUserController {
      * @return 结果
      */
     @RequestMapping("modifyDoctor")
-    public R updateDoctor(Doctor doctor) {
+    @Operation(summary = "更新医生信息", description = "更新医生信息")
+    public R updateDoctor(@Parameter(description = "医生信息对象") Doctor doctor) {
         if (BooleanUtils.isTrue(doctorUserService.updateDoctor(doctor))) {
             return R.ok("修改医生成功");
         }
@@ -136,10 +147,11 @@ public class AdminUserController {
      * @return 患者数据
      */
     @RequestMapping("findAllPatients")
+    @Operation(summary = "分页查询所有患者", description = "根据页码和查询条件分页查询患者信息")
     public R<PatientPageVo> findPatientPage(
-            @RequestParam(value = "pageNumber") Integer pageNum,
-            @RequestParam(value = "size") Integer pageSize,
-            @RequestParam(value = "query") String query
+            @Parameter(description = "页码") @RequestParam(value = "pageNumber") Integer pageNum,
+            @Parameter(description = "每页数量") @RequestParam(value = "size") Integer pageSize,
+            @Parameter(description = "查询关键字") @RequestParam(value = "query") String query
     ) {
         return R.ok(patientUserService.findPatientPage(pageNum, pageSize, query));
     }
@@ -151,7 +163,8 @@ public class AdminUserController {
      * @return 结果
      */
     @RequestMapping("deletePatient")
-    public R deletePatient(@RequestParam(value = "pId") int pId) {
+    @Operation(summary = "删除患者", description = "逻辑删除患者，将患者状态设置为删除")
+    public R deletePatient(@Parameter(description = "患者ID") @RequestParam(value = "pId") int pId) {
         if (BooleanUtils.isTrue(patientUserService.deletePatient(pId))) {
             return R.ok("删除患者成功");
         }
@@ -168,10 +181,11 @@ public class AdminUserController {
      * @return 挂号列表
      */
     @RequestMapping("findAllOrders")
+    @Operation(summary = "分页查询所有挂号信息", description = "根据页码和查询条件分页查询挂号信息")
     public R<OrdersPageVo> findOrdersPages(
-            @RequestParam(value = "pageNumber") Integer pageNum,
-            @RequestParam(value = "size") Integer pageSize,
-            @RequestParam(value = "query") String query
+            @Parameter(description = "页码") @RequestParam(value = "pageNumber") Integer pageNum,
+            @Parameter(description = "每页数量") @RequestParam(value = "size") Integer pageSize,
+            @Parameter(description = "查询关键字") @RequestParam(value = "query") String query
     ) {
         return R.ok(orderService.findOrdersPages(pageNum, pageSize, query));
     }
@@ -183,7 +197,8 @@ public class AdminUserController {
      * @return 结果
      */
     @RequestMapping("deleteOrder")
-    public R deleteOrder(@RequestParam(value = "oId") Integer oId) {
+    @Operation(summary = "删除挂号单", description = "删除指定ID的挂号单")
+    public R deleteOrder(@Parameter(description = "挂号单ID") @RequestParam(value = "oId") Integer oId) {
         if (BooleanUtils.isTrue(orderService.deleteOrder(oId))) {
             return R.ok("删除挂号单成功");
         }

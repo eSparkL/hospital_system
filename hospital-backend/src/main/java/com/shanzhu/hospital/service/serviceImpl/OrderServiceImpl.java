@@ -1,6 +1,7 @@
 package com.shanzhu.hospital.service.serviceImpl;
 
 import cn.hutool.core.collection.CollUtil;
+import cn.hutool.core.date.DatePattern;
 import cn.hutool.core.date.DateUtil;
 import cn.hutool.core.util.RandomUtil;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
@@ -331,7 +332,7 @@ public class OrderServiceImpl extends ServiceImpl<OrderMapper, Orders> implement
     }
 
     /**
-     * 统计近今天各科室挂号人数
+     * 统计近20天科室人数
      *
      * @return 人数
      */

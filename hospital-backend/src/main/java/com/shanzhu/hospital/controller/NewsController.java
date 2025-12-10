@@ -16,6 +16,14 @@ public class NewsController {
 
     private final NewsService newsService;
 
+    @GetMapping("/search")
+    public R<NewsPageVo> searchNews(
+            @RequestParam(value = "keyword") String keyword,
+            @RequestParam(value = "pageNumber", defaultValue = "1") Integer pageNum,
+            @RequestParam(value = "size", defaultValue = "20") Integer pageSize) {
+        return R.ok(newsService.searchNews(pageNum, pageSize, keyword));
+    }
+
     /**
      * 获取已发布的资讯列表（分页）- 公开访问
      */
