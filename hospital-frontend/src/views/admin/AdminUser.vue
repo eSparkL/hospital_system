@@ -64,6 +64,10 @@
               <i class="iconfont icon-checks-menu" style="font-size: 18px;"> 检查项目管理</i>
             </el-menu-item>
 
+            <el-menu-item index="drugList" @click="menuClick('drugList')">
+              <i class="iconfont icon-drug-menu" style="font-size: 18px;"> 药物管理</i>
+            </el-menu-item>
+
             <el-menu-item index="arrangeIndex" @click="menuClick('arrangeIndex')">
               <i class="iconfont icon-arrange-menu" style="font-size: 18px;"> 医生排班管理</i>
             </el-menu-item>
@@ -80,14 +84,15 @@
             </el-menu-item>
           </el-submenu>
 
-          <!--          <el-submenu index="submenu-4">-->
-          <!--            <template slot="title">-->
-          <!--              <span style="font-size: 18px;color: #2b5d88">数据统计</span>-->
-          <!--            </template>-->
-          <!--            <el-menu-item index="dataExpore" @click="menuClick('dataExpore')">-->
-          <!--              <i class="iconfont icon-count-menu" style="font-size: 18px;"> 数据统计分析</i>-->
-          <!--            </el-menu-item>-->
-          <!--          </el-submenu>-->
+          <el-submenu index="submenu-4">
+            <template slot="title">
+              <span style="font-size: 18px;color: #2b5d88">数据统计</span>
+            </template>
+            <el-menu-item index="dataExpore" @click="menuClick('dataExpore')">
+              <i class="iconfont icon-count-menu" style="font-size: 18px;"> 数据统计分析</i>
+            </el-menu-item>
+          </el-submenu>
+
 
         </el-menu>
       </el-aside>
@@ -122,10 +127,7 @@ export default {
     menuClick(path){
       this.activePath=path;
       setActivePath(path);
-      // 使用/admin/前缀
-      if(this.$route.path !== `/admin/${path}`) {
-        this.$router.push(`/admin/${path}`);
-      }
+      if(this.$route.path !== "/"+path) this.$router.push(path);
     },
     //管理员
     logoutAdmin() {

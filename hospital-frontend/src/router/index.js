@@ -27,7 +27,7 @@ import DoctorHome from "@/views/doctor/DoctorHome.vue";
 import PatientHome from "@/views/patient/PatientHome.vue";
 //import MyBed from "@/views/patient/MyBed.vue";
 import BedList from "@/views/bed/BedList.vue";
-import DataExpore from "@/views/DataExpore.vue";
+import DataExpore from "@/views/admin/DataExpore.vue";
 import echarts from 'echarts';//引入echarts
 import DealOrderAgain from "@/views/doctor/DealOrderAgain.vue";
 import DoctorCard from "@/views/doctor/DoctorCard.vue";
@@ -51,170 +51,48 @@ const routes = [
   {
     path: "/admin",
     component: AdminUser,
-    meta: {
-      requireAuth: true,
-    },
+    meta: { requireAuth: true },
     children:[
-      {
-        path: "/adminLayout",
-        component: AdminHome,
-        meta: {
-          requireAuth: true,
-        },
-      },
-      {
-      path: "/doctorList",
-      component: DoctorList,
-      meta: {
-        requireAuth: true,
-      },
-    },
-    {
-      path: "/patientList",
-      component: PatientList,
-      meta: {
-        requireAuth: true,
-      },
-    },
-    {
-      path: "/orderList",
-      component: OrderList,
-      meta: {
-        requireAuth: true,
-      },
-    },
-    {
-      path: "/drugList",
-      component: DrugList,
-      meta: {
-        requireAuth: true,
-      },
-    },
-    {
-      path: "/checkList",
-      component: CheckList,
-      meta: {
-        requireAuth: true,
-      },
-
-    },
-    {
-      path: "/bedList",
-      component: BedList,
-      meta: {
-        requireAuth: true,
-      },
-
-    },
-    {
-      path: "/dataExpore",
-      component: DataExpore,
-      meta: {
-        requireAuth: true,
-      },
-
-    },
-    {
-      path: "/arrangeIndex",
-      component: ArrangeIndex,
-      meta: {
-        requireAuth: true,
-      },
-    },
-    {
-      path: "/sectionList",
-      component: SectionList,
-      meta: {
-        requireAuth: true,
-      },
-    },
-    // 资讯管理使用相对路径，这样会在AdminUser布局内显示
-      {
-        path: "newsManage",  // 注意：这里没有斜杠
-        component: () => import('@/views/admin/NewsManage.vue'),
-        meta: {
-          requireAuth: true,
-        },
-      }
-  ]
+      { path: "adminLayout", component: AdminHome, meta:{requireAuth:true} },
+      { path: "doctorList", component: DoctorList, meta:{requireAuth:true} },
+      { path: "patientList", component: PatientList, meta:{requireAuth:true} },
+      { path: "orderList", component: OrderList, meta:{requireAuth:true} },
+      { path: "drugList", component: DrugList, meta:{requireAuth:true} },
+      { path: "checkList", component: CheckList, meta:{requireAuth:true} },
+      { path: "bedList", component: BedList, meta:{requireAuth:true} },
+      { path: "dataExpore", component: DataExpore, meta:{requireAuth:true} },
+      { path: "arrangeIndex", component: ArrangeIndex, meta:{requireAuth:true} },
+      { path: "sectionList", component: SectionList, meta:{requireAuth:true} },
+      { path: "newsManage", component: () => import('@/views/admin/NewsManage.vue'), meta:{requireAuth:true} },
+    ]
   },
   {
     path: "/patient",
     component: Patient,
-    meta: {
-      requireAuth: true,
-    },
+    meta: { requireAuth: true },
     children:[
-      {
-        path: "/patientLayout",
-        component: PatientHome,
-        meta: {
-          requireAuth: true,
-        },
-      },
-      {
-        path: "/orderOperate",
-        component: OrderOperate
-      },
-      {
-        path: "/sectionMessage",
-        component: SectionMessage
-      },
-      {
-        path: "/myOrder",
-        component: MyOrder
-      },
-      // {
-      //   path: "/myBed",
-      //   component: MyBed
-      // },
-      {
-        path: "/patientCard",
-        component: PatientCard,
-      }
+      { path: "patientLayout", component: PatientHome, meta:{requireAuth:true} },
+      { path: "orderOperate", component: OrderOperate },
+      { path: "sectionMessage", component: SectionMessage },
+      { path: "myOrder", component: MyOrder },
+      { path: "patientCard", component: PatientCard },
     ]
   },
   {
     path: "/doctor",
     component: DoctorUser,
-    meta: {
-      requireAuth: true,
-    },
+    meta: { requireAuth: true },
     children:[
-      {
-        path: "/doctorLayout",
-        component: DoctorHome,
-        meta: {
-          requireAuth: true,
-        },
-      },
-      {
-        path: "/orderToday",
-        component: OrderToday,
-    },
-    {
-      path: "/dealOrder",
-      component: DealOrder
-    },
-    {
-      path: "/dealOrderAgain",
-      component: DealOrderAgain
-    },
-    {
-      path: "/doctorOrder",
-      component: DoctorOrder,
-  },
-//   {
-//     path: "/inBed",
-//     component: InBed,
-// },
-{
-  path: "/doctorCard",
-  component: DoctorCard,
-}
-    ],
-
+      { path: "doctorLayout", component: DoctorHome, meta:{requireAuth:true} },
+      { path: "orderToday", component: OrderToday },
+      { path: "dealOrder", component: DealOrder },
+      { path: "dealOrderAgain", component: DealOrderAgain },
+      { path: "doctorOrder", component: DoctorOrder },
+      { path: "doctorCard", component: DoctorCard },
+    ]
   }
+
+
 ];
 
 const router = new VueRouter({
@@ -222,17 +100,18 @@ const router = new VueRouter({
 });
 //没登录的情况下，访问任何一个页面都会返回登录页面
 router.beforeEach((to, from, next) => {
-  if (to.meta.requireAuth) {
-    const token = getToken();
-    if (token !== null) {
-      //直接放行
-      next();
-  } else {
-      next("/login");
+  const token = getToken();
+
+  // 只要匹配路由中有一个 requireAuth 就拦截
+  if (to.matched.some(record => record.meta.requireAuth)) {
+    if (token) {
+      next();   // 有 token 放行
+    } else {
+      next("/login");  // 没 token 回登录
     }
+  } else {
+    next();   // 不需要登录的直接放行
   }
-  else{
-    next();
-  }
-  });
+});
+
 export default router;

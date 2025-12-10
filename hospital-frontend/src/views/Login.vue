@@ -651,7 +651,7 @@ export default {
                                         "用户名或密码错误"
                                     );
                                 setToken(res.data.data.token);
-                                this.$router.push("/adminLayout");
+                                this.$router.push("/admin/adminLayout");
                             })
                             .catch((error) => {
                                 this.$message.error(
@@ -672,7 +672,7 @@ export default {
                                         "用户名或密码错误"
                                     );
                                 setToken(res.data.data.token);
-                                this.$router.push("/doctorLayout");
+                                this.$router.push("/doctor/doctorLayout");
                             })
                             .catch((error) => {
                                 this.$message.error(
@@ -693,7 +693,7 @@ export default {
                                         "用户名或密码错误"
                                     );
                                 setToken(res.data.data.token);
-                                this.$router.push("/patientLayout");
+                                this.$router.push("/patient/patientLayout");
                             })
                             .catch((error) => {
                                 this.$message.error(

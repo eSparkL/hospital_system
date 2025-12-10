@@ -5,8 +5,15 @@
   <div class="Echarts">
     <div id="orderSection" style="width: 1200px; height: 400px;"></div>
     <div id="orderLast10Days" style="width: 1200px; height: 400px;"></div>
-    <div id="patientAge" style="width: 600px; height: 500px;float:right"></div>
+
+    <!-- 新增 flex 行，用来放 性别 + 年龄 -->
+    <div class="gender-age-row">
+      <div id="patientGender" class="chart-box"></div>
+      <div id="patientAge" class="chart-box"></div>
+    </div>
   </div>
+
+
 </template>
 <script>
 import request from "@/utils/request.js";
@@ -19,6 +26,58 @@ export default {
     };
   },
   methods: {
+    // 统计患者性别分布
+    patientGender() {
+      this.$nextTick(() => {
+        const dom = document.getElementById("patientGender");
+
+        if (!dom) {
+          console.error("找不到 patientGender DOM");
+          return;
+        }
+
+        const myChart = this.$echarts.init(dom);
+
+        request.get("order/orderGender")
+          .then(res => {
+            const data = res.data.data || [];
+
+            console.log("性别数据：", data);
+
+            const option = {
+              title: {
+                text: '患者性别分布',
+                left: 'center'
+              },
+              tooltip: {
+                trigger: 'item'
+              },
+              legend: {
+                top: '5%'
+              },
+              series: [
+                {
+                  name: '性别',
+                  type: 'pie',
+                  radius: '65%',
+                  data: data.map(item => ({
+                    value: item.total,
+                    name: item.gender   // ← 正确使用接口返回值
+                  }))
+                }
+              ]
+            };
+
+            myChart.setOption(option);
+            myChart.resize();
+          })
+          .catch(err => {
+            console.error(err);
+          });
+      });
+    },
+
+
     //统计患者年龄分布
     patientAge(){
       var myChart = this.$echarts.init(document.getElementById("patientAge"));
@@ -89,7 +148,7 @@ export default {
       .then(res => {
         var option = {
              title: {
-                  text: '挂号科室人数统计',
+                  text: '近7日挂号科室人数统计',
                   left: 'center'
                },
                   xAxis: {
@@ -101,9 +160,10 @@ export default {
                          }
 
                   },
-                yAxis: {
-                    type: 'value'
-                },
+          yAxis: {
+            type: 'value',
+            minInterval: 1
+          },
                 series: [{
                     data: res.data.data.map((item) => item.countSection),
                     type: 'bar',
@@ -127,7 +187,7 @@ export default {
           .then(res => {
             var option = {
               title: {
-                text: '近十日的就诊量趋势',
+                text: '近7日的就诊量趋势',
                 left: 'center'
               },
               xAxis: {
@@ -140,7 +200,11 @@ export default {
 
               },
               yAxis: {
-                type: 'value'
+                type: 'value',
+                minInterval: 1,   // ← 不允许小数刻度
+                axisLabel: {
+                  formatter: '{value}'  // 显示整数
+                }
               },
               series: [{
                 data: res.data.data.map((item) => item.total),
@@ -169,9 +233,12 @@ export default {
 
   },
   mounted() {
-    this.orderLast10Days();
-    this.orderSection();
-    this.patientAge();
+    this.$nextTick(() => {
+      this.orderLast10Days();
+      this.orderSection();
+      this.patientAge();
+      this.patientGender();
+    });
   },
   created() {
 
@@ -180,4 +247,21 @@ export default {
 </script>
 
 <style>
+.gender-age-row {
+  display: flex;
+  justify-content: space-between;   /* 两个图左右分开 */
+  margin-top: 20px;
+}
+
+.chart-box {
+  width: 48%;        /* 两图平均分 */
+  height: 500px;
+}
+.gender-age-row {
+  display: flex;
+  justify-content: space-between;
+  margin-top: 20px;
+  width: 1200px; /* 加这一行确保宽度 */
+}
+
 </style>

@@ -23,55 +23,55 @@
       </div>
     </el-card>
 
-    <!--科室选择-->
+    <!--科室选择 -->
     <el-card>
       <el-tabs type="border-card">
-        <el-tab-pane label="牙体牙髓科">
+        <el-tab-pane label="内科">
           <ul>
             <li v-for="inter in inters" :key="inter">
               <el-button type="success" plain key="inter-button"  style="margin: 5px;" @click="sectionClick(inter)">{{ inter }}</el-button>
             </li>
           </ul>
         </el-tab-pane>
-        <el-tab-pane label="牙周科">
+        <el-tab-pane label="外科">
           <ul>
             <li v-for="out in outs" :key="out">
               <el-button type="success" plain style="margin: 5px;" @click="sectionClick(out)">{{ out }}</el-button>
             </li>
           </ul>
         </el-tab-pane>
-        <el-tab-pane label="口腔修复科">
+        <el-tab-pane label="妇产科">
           <ul>
             <li v-for="woman in women" :key="woman">
               <el-button type="success" plain style="margin: 5px;" @click="sectionClick(woman)">{{ woman }}</el-button>
             </li>
           </ul>
         </el-tab-pane>
-        <el-tab-pane label="口腔正畸科">
+        <el-tab-pane label="儿科">
           <ul>
             <li v-for="kid in kids" :key="kid">
               <el-button type="success" plain style="margin: 5px;" @click="sectionClick(kid)">{{ kid }}</el-button>
             </li>
           </ul>
         </el-tab-pane>
-        <el-tab-pane label="口腔种植科">
+        <el-tab-pane label="眼耳鼻喉科">
           <ul>
             <li v-for="five in fives" :key="five">
               <el-button type="success" plain style="margin: 5px;" @click="sectionClick(five)">{{ five }}</el-button>
             </li>
           </ul>
         </el-tab-pane>
-        <el-tab-pane label="儿童口腔科">
+        <el-tab-pane label="口腔科">
           <ul>
-            <li v-for="chinese in chinese" :key="chinese">
-              <el-button type="success" plain style="margin: 5px;" @click="sectionClick(chinese)">{{ chinese }}</el-button>
+            <li v-for="mouth in mouth" :key="mouth">
+              <el-button type="success" plain style="margin: 5px;" @click="sectionClick(mouth)">{{ mouth }}</el-button>
             </li>
           </ul>
         </el-tab-pane>
-        <el-tab-pane label="口腔颌面外科">
+        <el-tab-pane label="皮肤科">
           <ul>
-            <li v-for="others in others" :key="others">
-              <el-button type="success" plain style="margin: 5px;" @click="sectionClick(others)">{{ others }}</el-button>
+            <li v-for="skin in skin" :key="skin">
+              <el-button type="success" plain style="margin: 5px;" @click="sectionClick(skin)">{{ skin }}</el-button>
             </li>
           </ul>
         </el-tab-pane>
@@ -173,24 +173,24 @@ export default {
       arrangeTime:"",
       //科室数据
       inters: [
-        "口腔检查",
-        "X线检查",
-        "牙髓活力测试",
-        "咬合检查",
+        "简易门诊（慢病）",
+        "精神科门诊",
+        "呼吸（心血管、神经）内科门诊",
+        "消化内科门诊",
       ],
       outs: [
-        "空腔临床检查",
-        "影像学检查",
-        "牙周组织活检",
-        "实验室检查",
-        "牙周内窥镜检查",
-        "唾液检查"
+        "肝胆、肠胃外科",
+        "肛肠科",
+        "甲状腺、乳腺外科",
+        "胸部外科",
+        "骨科门诊",
+        "手足创伤外科门诊"
       ],
-      women: ["空腔临床检查", "影像学检查","模型检查","美学检查","功能检查"],
-      kids: ["病史采集", "临床检查","影像学检查","模型分析"],
-      fives: ["空腔临床检查", "影像学检查","全身健康评估"],
-      chinese: ["病史采集","空腔临床检查", "影像学检查","功能检查"],
-      others: ["口腔检查","影像学检查","功能检查"],
+      women: ["妇产科门诊"],
+      kids: ["儿科门诊"],
+      fives: ["眼科、耳鼻喉科门诊"],
+      mouth: ["口腔科门诊"],
+      skin: ["皮肤科门诊"],
       //科室医生表格数据
       section: "",
       doctorData: [],
