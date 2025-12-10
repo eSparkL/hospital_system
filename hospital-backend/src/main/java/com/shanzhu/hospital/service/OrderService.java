@@ -5,6 +5,7 @@ import com.shanzhu.hospital.entity.vo.OrderArrangeVo;
 import com.shanzhu.hospital.entity.vo.OrdersPageVo;
 
 import java.util.List;
+import java.util.Map;
 
 /**
  * 挂号相关 服务层
@@ -158,5 +159,17 @@ public interface OrderService {
      * @return 人数
      */
     List<String> countOrderSection();
+
+    List<Map<String, Object>> orderLast10Days();
+
+    // --- 药物/检查接口 ---
+    Boolean addOrderDrug(Map<String, Object> params);      // 添加药物
+    Boolean removeOrderDrug(Map<String, Object> params);   // 取消药物
+    Boolean addOrderCheck(Map<String, Object> params);     // 添加检查
+    Boolean removeOrderCheck(Map<String, Object> params);  // 取消检查
+
+    // --- 获取订单已选项目 ---
+    List<Map<String,Object>> getOrderDrugs(Integer oId);
+    List<Map<String,Object>> getOrderChecks(Integer oId);
 
 }

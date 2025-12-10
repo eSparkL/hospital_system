@@ -11,6 +11,7 @@ import org.apache.commons.lang3.BooleanUtils;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
+import java.util.Map;
 
 /**
  * 挂号 控制层
@@ -164,12 +165,22 @@ public class OrderController {
     }
 
     /**
-     * 统计近20天科室人数
+     * 统计近今天各科室人数
      *
      * @return 人数
      */
     @RequestMapping("orderSection")
     public R<List<String>> countOrderSection() {
         return R.ok(orderService.countOrderSection());
+    }
+
+    /**
+     * 统计近十天挂号人数
+     *
+     * @return 人数
+     */
+    @GetMapping("/orderLast10Days")
+    public R<List<Map<String, Object>>> orderLast10Days() {
+        return R.ok(orderService.orderLast10Days());
     }
 }

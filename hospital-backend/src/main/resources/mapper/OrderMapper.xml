@@ -27,9 +27,10 @@
     </select>
 
 
-    <select id="orderGender" resultMap="orderPatientMap">
-        select p_gender,count(p_gender) as countGender from patient_user p,orders o
-        where p.p_id=o.p_id GROUP BY p_gender
+    <select id="orderGender" resultType="map">
+        SELECT p_gender AS gender, COUNT(*) AS total
+        FROM patient_user
+        GROUP BY p_gender;
     </select>
 
 
@@ -79,10 +80,13 @@
     </resultMap>
 
     <select id="orderSection" resultMap="orderSectionMap">
-        SELECT d.d_section,count(o.d_id) as countSection from orders o,doctor_user d where o.d_id=d.d_id
-        AND o_start BETWEEN #{startTime} and #{endTime}
+        SELECT d.d_section,count(o.d_id) as countSection
+        FROM orders o,doctor_user d
+        WHERE o.d_id=d.d_id
+          AND o_start >= DATE_SUB(CURDATE(), INTERVAL 7 DAY)
         GROUP BY d.d_section
     </select>
+
 
     <resultMap id="orderPatientDoctorMap" type="com.shanzhu.hospital.entity.po.Orders">
         <id property="oId" column="o_id" />
@@ -126,5 +130,56 @@
         and o.p_id=p.p_id
         ORDER BY o.o_end DESC
     </select>
+
+    <select id="selectLast10Days" resultType="map">
+        SELECT DATE(o_start) AS date, COUNT(*) AS total
+        FROM orders
+        WHERE o_start >= DATE_SUB(CURDATE(), INTERVAL 7 DAY)
+        GROUP BY DATE(o_start)
+        ORDER BY date
+    </select>
+
+    <!-- 查询订单已选药物 -->
+    <select id="selectOrderDrugs" resultType="map" parameterType="int">
+        SELECT d.dr_id, d.dr_name, od.num
+        FROM orders_drug od
+                 LEFT JOIN drug d ON od.dr_id = d.dr_id
+        WHERE od.o_id = #{oId}
+    </select>
+
+    <!-- 查询订单已选检查 -->
+    <select id="selectOrderChecks" resultType="map" parameterType="int">
+        SELECT c.ch_id, c.ch_name
+        FROM orders_check oc
+                 LEFT JOIN checks c ON oc.ch_id = c.ch_id
+        WHERE oc.o_id = #{oId}
+    </select>
+
+    <!-- 插入药物 -->
+    <insert id="insertOrderDrug">
+        INSERT INTO orders_drug (o_id, dr_id, num)
+        VALUES (#{oId}, #{drId}, #{num})
+    </insert>
+
+    <!-- 删除药物 -->
+    <delete id="deleteOrderDrug" parameterType="map">
+        DELETE FROM orders_drug
+        WHERE o_id = #{oId} AND dr_id = #{drId}
+    </delete>
+
+    <!-- 插入检查 -->
+    <insert id="insertOrderCheck">
+        INSERT INTO orders_check (o_id, ch_id)
+        VALUES (#{oId}, #{chId})
+    </insert>
+
+    <!-- 删除检查 -->
+    <delete id="deleteOrderCheck" parameterType="map">
+        DELETE FROM orders_check
+        WHERE o_id = #{oId} AND ch_id = #{chId}
+    </delete>
+
+
+
 
 </mapper>

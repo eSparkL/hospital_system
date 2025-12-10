@@ -1,7 +1,6 @@
 package com.shanzhu.hospital.service.serviceImpl;
 
 import cn.hutool.core.collection.CollUtil;
-import cn.hutool.core.date.DatePattern;
 import cn.hutool.core.date.DateUtil;
 import cn.hutool.core.util.RandomUtil;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
@@ -9,6 +8,7 @@ import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.baomidou.mybatisplus.core.toolkit.Wrappers;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
+import com.shanzhu.hospital.common.R;
 import com.shanzhu.hospital.entity.po.Arrange;
 import com.shanzhu.hospital.entity.po.Orders;
 import com.shanzhu.hospital.entity.vo.OrderArrangeVo;
@@ -22,6 +22,7 @@ import org.springframework.stereotype.Service;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 import java.util.List;
+import java.util.Map;
 
 /**
  * 挂号相关 服务层
@@ -330,17 +331,74 @@ public class OrderServiceImpl extends ServiceImpl<OrderMapper, Orders> implement
     }
 
     /**
-     * 统计近20天科室人数
+     * 统计近今天各科室挂号人数
      *
      * @return 人数
      */
     @Override
     public List<String> countOrderSection() {
-        //过去20天开始时间
-        LocalDate beginDate = LocalDate.now().minusDays(20);
-        String startTime = beginDate.format(DateTimeFormatter.ofPattern(DatePattern.NORM_DATE_PATTERN));
-        String endTime = DateUtil.now();
+        LocalDate today = LocalDate.now();
+        String startTime = today.atStartOfDay().format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss"));
+        String endTime = DateUtil.now(); // 当前时间
 
         return this.orderMapper.orderSection(startTime, endTime);
     }
+    /**
+     * 统计近今近10日挂号人数
+
+     */
+    @Override
+    public List<Map<String, Object>> orderLast10Days() {
+        return orderMapper.selectLast10Days(); // 直接返回数据
+    }
+
+    @Override
+    public List<Map<String,Object>> getOrderDrugs(Integer oId) {
+        return orderMapper.selectOrderDrugs(oId);
+    }
+
+    @Override
+    public List<Map<String,Object>> getOrderChecks(Integer oId) {
+        return orderMapper.selectOrderChecks(oId);
+    }
+
+    @Override
+    public Boolean addOrderDrug(Map<String, Object> params) {
+        Integer oId = (Integer) params.get("oId");
+        Integer drId = (Integer) params.get("drId");
+        Integer num  = (Integer) params.get("num");
+
+        // 调用Mapper插入数据
+        int inserted = orderMapper.insertOrderDrug(oId, drId, num);
+        return inserted > 0;
+    }
+
+    @Override
+    public Boolean removeOrderDrug(Map<String, Object> params) {
+        Integer oId = (Integer) params.get("oId");
+        Integer drId = (Integer) params.get("drId");
+
+        int deleted = orderMapper.deleteOrderDrug(oId, drId);
+        return deleted > 0;
+    }
+
+    @Override
+    public Boolean addOrderCheck(Map<String, Object> params) {
+        Integer oId = (Integer) params.get("oId");
+        Integer chId = (Integer) params.get("chId");
+
+        int inserted = orderMapper.insertOrderCheck(oId, chId);
+        return inserted > 0;
+    }
+
+    @Override
+    public Boolean removeOrderCheck(Map<String, Object> params) {
+        Integer oId = (Integer) params.get("oId");
+        Integer chId = (Integer) params.get("chId");
+
+        int deleted = orderMapper.deleteOrderCheck(oId, chId);
+        return deleted > 0;
+    }
+
+
 }

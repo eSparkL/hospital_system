@@ -4,7 +4,7 @@
 <template>
   <div class="Echarts">
     <div id="orderSection" style="width: 1200px; height: 400px;"></div>
-    <div id="orderGender" style="width: 540px; height: 500px;float:left"></div>
+    <div id="orderLast10Days" style="width: 1200px; height: 400px;"></div>
     <div id="patientAge" style="width: 600px; height: 500px;float:right"></div>
   </div>
 </template>
@@ -120,50 +120,45 @@ export default {
       })
     },
 
-    //挂号男女比例
-    orderGender(){
-      var myChart = this.$echarts.init(document.getElementById("orderGender"));
-      request.get("order/orderGender",)
-      .then(res => {
-      var option = {
-                title: {
-                    text: '患者性别比例',
-                    left: 'center'
-                },
-                tooltip: {
-                    trigger: 'item'
-                },
-                legend: {
-                    orient: 'vertical',
-                    left: 'left',
-                },
-                series: [
-                    {
-                        name: '人数',
-                        type: 'pie',
-                        radius: '50%',
-                        data: [
-                            {value: res.data.data.map((item) => item.countGender)[0], name: res.data.data.map((item) => item.patient.pGender)[0]},
-                            {value: res.data.data.map((item) => item.countGender)[1], name: res.data.data.map((item) => item.patient.pGender)[1]},
+    //近十日的就诊量趋势
+    orderLast10Days(){
+      let myChart = this.$echarts.init(document.getElementById("orderLast10Days"));
+      request.get("order/orderLast10Days")
+          .then(res => {
+            var option = {
+              title: {
+                text: '近十日的就诊量趋势',
+                left: 'center'
+              },
+              xAxis: {
+                type: 'category',
+                data: res.data.data.map((item) => item.date),
+                axisLabel: {//解决各个不显示问题
+                  interval:0,
+                  rotate:10,
+                }
 
-                        ],
-                        emphasis: {
-                            itemStyle: {
-                                shadowBlur: 10,
-                                shadowOffsetX: 0,
-                                shadowColor: 'rgba(0, 0, 0, 0.5)'
-                            }
-                        }
-                    }
-                ]
+              },
+              yAxis: {
+                type: 'value'
+              },
+              series: [{
+                data: res.data.data.map((item) => item.total),
+                type: 'bar',
+                showBackground: true,
+                backgroundStyle: {
+                  color: 'rgba(180, 180, 180, 0.2)'
+                }
+              }]
             };
-          myChart.setOption(option);
-
-      })
-      .catch(err => {
-        console.error(err);
-      });
+            myChart.setOption(option);
+          })
+          .catch(err => {
+            console.error(err);
+          })
     },
+
+
     //获取过去num天日期
     pastSeven(num) {
       let date = new Date();
@@ -174,7 +169,7 @@ export default {
 
   },
   mounted() {
-    this.orderGender();
+    this.orderLast10Days();
     this.orderSection();
     this.patientAge();
   },

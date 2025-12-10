@@ -6,6 +6,7 @@ import org.apache.ibatis.annotations.Mapper;
 import org.apache.ibatis.annotations.Param;
 
 import java.util.List;
+import java.util.Map;
 
 /**
  * 挂号相关 持久层（mapper）
@@ -76,5 +77,26 @@ public interface OrderMapper extends BaseMapper<Orders> {
      * @return 挂号信息
      */
     List<Orders> findOrderByPid(Integer pId);
+
+    List<Map<String, Object>> selectLast10Days();
+
+    List<Map<String,Object>> selectOrderDrugs(@Param("oId") Integer oId);
+    List<Map<String,Object>> selectOrderChecks(@Param("oId") Integer oId);
+
+    int deleteOrderDrug(@Param("oId") Integer oId, @Param("drId") Integer drId);
+
+    int deleteOrderCheck(@Param("oId") Integer oId, @Param("chId") Integer chId);
+    /**
+     * 添加挂号单药物
+     */
+    int insertOrderDrug(@Param("oId") Integer oId,
+                        @Param("drId") Integer drId,
+                        @Param("num") Integer num);
+
+    /**
+     * 添加挂号单检查项目
+     */
+    int insertOrderCheck(@Param("oId") Integer oId,
+                         @Param("chId") Integer chId);
 
 }
