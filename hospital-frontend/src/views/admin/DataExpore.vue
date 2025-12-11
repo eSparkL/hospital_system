@@ -148,7 +148,7 @@ export default {
       .then(res => {
         var option = {
              title: {
-                  text: '近7日挂号科室人数统计',
+                  text: '近 7 日挂号科室人数统计',
                   left: 'center'
                },
                   xAxis: {
@@ -187,7 +187,7 @@ export default {
           .then(res => {
             var option = {
               title: {
-                text: '近7日的就诊量趋势',
+                text: '近 10 日的就诊量趋势',
                 left: 'center'
               },
               xAxis: {

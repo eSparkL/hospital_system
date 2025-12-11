@@ -36,7 +36,22 @@ public class OrderServiceImpl extends ServiceImpl<OrderMapper, Orders> implement
     private final OrderMapper orderMapper;
 
     private final ArrangeMapper arrangeMapper;
-
+    /**
+     * 查询指定日期的所有预约
+     *
+     * @param date 日期 (格式: yyyy-MM-dd)
+     * @return 预约列表
+     */
+    @Override
+    public List<Orders> getOrdersByDate(String date) {
+        // 使用 LambdaQueryWrapper 查询指定日期的预约
+        return lambdaQuery()
+                // 使用 LIKE 匹配日期部分 (假设 oStart 字段存储的是日期时间字符串)
+                .like(Orders::getOStart, date)
+                // 确保只查询未完成的预约
+                .eq(Orders::getOState, 0)
+                .list();
+    }
     /**
      * 查询挂号信息 - 分页
      *
@@ -351,54 +366,6 @@ public class OrderServiceImpl extends ServiceImpl<OrderMapper, Orders> implement
     @Override
     public List<Map<String, Object>> orderLast10Days() {
         return orderMapper.selectLast10Days(); // 直接返回数据
-    }
-
-    @Override
-    public List<Map<String,Object>> getOrderDrugs(Integer oId) {
-        return orderMapper.selectOrderDrugs(oId);
-    }
-
-    @Override
-    public List<Map<String,Object>> getOrderChecks(Integer oId) {
-        return orderMapper.selectOrderChecks(oId);
-    }
-
-    @Override
-    public Boolean addOrderDrug(Map<String, Object> params) {
-        Integer oId = (Integer) params.get("oId");
-        Integer drId = (Integer) params.get("drId");
-        Integer num  = (Integer) params.get("num");
-
-        // 调用Mapper插入数据
-        int inserted = orderMapper.insertOrderDrug(oId, drId, num);
-        return inserted > 0;
-    }
-
-    @Override
-    public Boolean removeOrderDrug(Map<String, Object> params) {
-        Integer oId = (Integer) params.get("oId");
-        Integer drId = (Integer) params.get("drId");
-
-        int deleted = orderMapper.deleteOrderDrug(oId, drId);
-        return deleted > 0;
-    }
-
-    @Override
-    public Boolean addOrderCheck(Map<String, Object> params) {
-        Integer oId = (Integer) params.get("oId");
-        Integer chId = (Integer) params.get("chId");
-
-        int inserted = orderMapper.insertOrderCheck(oId, chId);
-        return inserted > 0;
-    }
-
-    @Override
-    public Boolean removeOrderCheck(Map<String, Object> params) {
-        Integer oId = (Integer) params.get("oId");
-        Integer chId = (Integer) params.get("chId");
-
-        int deleted = orderMapper.deleteOrderCheck(oId, chId);
-        return deleted > 0;
     }
 
 

@@ -125,45 +125,5 @@ public class DoctorUserController {
         return R.error("评价失败");
     }
 
-    // --- 药物/检查接口 ---
-    @PostMapping("/addOrderDrug")
-    public R addOrderDrug(@RequestBody Map<String, Object> params) {
-        Boolean success = orderService.addOrderDrug(params);
-        return success ? R.ok("药物添加成功") : R.error("添加药物失败");
-    }
-
-    @PostMapping("/removeOrderDrug")
-    public R removeOrderDrug(@RequestBody Map<String, Object> params) {
-        Boolean success = orderService.removeOrderDrug(params);
-        return success ? R.ok("药物取消成功") : R.error("取消药物失败");
-    }
-
-    @PostMapping("/addOrderCheck")
-    public R addOrderCheck(@RequestBody Map<String, Object> params) {
-        Boolean success = orderService.addOrderCheck(params);
-        return success ? R.ok("检查添加成功") : R.error("添加检查失败");
-    }
-
-    @PostMapping("/removeOrderCheck")
-    public R removeOrderCheck(@RequestBody Map<String, Object> params) {
-        Boolean success = orderService.removeOrderCheck(params);
-        return success ? R.ok("检查取消成功") : R.error("取消检查失败");
-    }
-
-    // 获取订单已选药物
-    @GetMapping("/getOrderDrugs")
-    public R<List<Map<String,Object>>> getOrderDrugs(@RequestParam("oId") Integer oId) {
-        List<Map<String,Object>> list = orderService.getOrderDrugs(oId);
-        return R.ok(list);
-    }
-
-
-    // 获取订单已选检查
-    @GetMapping("/getOrderChecks")
-    public R<List<Map<String,Object>>> getOrderChecks(@RequestParam("oId") Integer oId) {
-        List<Map<String,Object>> list = orderService.getOrderChecks(oId);
-        return R.ok(list);
-    }
-
 
 }

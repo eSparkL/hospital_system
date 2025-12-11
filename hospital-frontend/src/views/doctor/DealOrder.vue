@@ -306,7 +306,7 @@ export default {
           return;
         }
         this.$message.success('提交成功');
-        this.$router.push('/doctorOrder');
+        this.$router.push('/doctor/orderToday');
       }).catch(error => {
         console.error(error);
         this.$message.error('提交失败');

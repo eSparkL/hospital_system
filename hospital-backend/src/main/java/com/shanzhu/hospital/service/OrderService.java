@@ -105,6 +105,7 @@ public interface OrderService {
      */
     OrdersPageVo findOrderByDid(Integer pageNum, Integer pageSize, String pId, Integer dId);
 
+
     /**
      * 统计挂号人数
      *
@@ -121,7 +122,13 @@ public interface OrderService {
      * @return 人数
      */
     Integer countOrderPeopleByDid(String oStart, Integer dId);
-
+    /**
+     * 查询指定日期的所有预约
+     *
+     * @param date 日期 (格式: yyyy-MM-dd)
+     * @return 预约列表
+     */
+    List<Orders> getOrdersByDate(String date);
     /**
      * 统计挂号男女人数
      *
@@ -161,15 +168,5 @@ public interface OrderService {
     List<String> countOrderSection();
 
     List<Map<String, Object>> orderLast10Days();
-
-    // --- 药物/检查接口 ---
-    Boolean addOrderDrug(Map<String, Object> params);      // 添加药物
-    Boolean removeOrderDrug(Map<String, Object> params);   // 取消药物
-    Boolean addOrderCheck(Map<String, Object> params);     // 添加检查
-    Boolean removeOrderCheck(Map<String, Object> params);  // 取消检查
-
-    // --- 获取订单已选项目 ---
-    List<Map<String,Object>> getOrderDrugs(Integer oId);
-    List<Map<String,Object>> getOrderChecks(Integer oId);
 
 }

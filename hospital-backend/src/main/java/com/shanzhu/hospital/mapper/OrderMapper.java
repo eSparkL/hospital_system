@@ -80,23 +80,4 @@ public interface OrderMapper extends BaseMapper<Orders> {
 
     List<Map<String, Object>> selectLast10Days();
 
-    List<Map<String,Object>> selectOrderDrugs(@Param("oId") Integer oId);
-    List<Map<String,Object>> selectOrderChecks(@Param("oId") Integer oId);
-
-    int deleteOrderDrug(@Param("oId") Integer oId, @Param("drId") Integer drId);
-
-    int deleteOrderCheck(@Param("oId") Integer oId, @Param("chId") Integer chId);
-    /**
-     * 添加挂号单药物
-     */
-    int insertOrderDrug(@Param("oId") Integer oId,
-                        @Param("drId") Integer drId,
-                        @Param("num") Integer num);
-
-    /**
-     * 添加挂号单检查项目
-     */
-    int insertOrderCheck(@Param("oId") Integer oId,
-                         @Param("chId") Integer chId);
-
 }

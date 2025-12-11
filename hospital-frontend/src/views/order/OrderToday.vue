@@ -43,7 +43,7 @@ export default {
     dealClick(oId, pId){
       this.$router.push(
         {
-          path: "/doctor/dealTabs",
+          path: "/doctor/dealOrder",
           query: {
             oId: oId,
             pId: pId
