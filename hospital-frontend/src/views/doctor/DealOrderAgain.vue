@@ -88,7 +88,7 @@ export default {
       }).then(res => {
         // 注意这里我们不需要检查响应状态，因为这是附加的操作
         this.$message.success('提交成功');
-        this.$router.push('/doctorOrder');
+        this.$router.push('/doctor/doctorOrder');
       }).catch(error => {
         console.error(error);
         this.$message.error('提交失败');

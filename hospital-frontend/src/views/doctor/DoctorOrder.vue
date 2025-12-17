@@ -116,7 +116,7 @@ export default {
     //点击追诊按钮
     dealClick(oId, pId) {
       this.$router.push({
-        path: "/dealOrderAgain",
+        path: "/doctor/dealOrderAgain",
         query: {
           oId: oId,
           pId: pId,
