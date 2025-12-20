@@ -85,4 +85,15 @@ public class DrugServiceImpl extends ServiceImpl<DrugMapper, Drug> implements Dr
     public Boolean deleteDrug(Integer drId) {
         return this.removeById(drId);
     }
+
+    @Override
+    public boolean decreaseDrugStock(Integer drId, Integer quantity) {
+        Drug drug = this.getById(drId);
+        if(drug == null || drug.getDrNumber() < quantity) {
+            return false; // 库存不足
+        }
+        drug.setDrNumber(drug.getDrNumber() - quantity);
+        return this.updateById(drug);
+    }
+
 }

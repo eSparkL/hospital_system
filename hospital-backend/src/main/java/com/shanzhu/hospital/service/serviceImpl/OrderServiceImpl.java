@@ -10,15 +10,20 @@ import com.baomidou.mybatisplus.core.toolkit.Wrappers;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.shanzhu.hospital.common.R;
+import com.shanzhu.hospital.common.Result;
 import com.shanzhu.hospital.entity.po.Arrange;
+import com.shanzhu.hospital.entity.po.Drug;
 import com.shanzhu.hospital.entity.po.Orders;
 import com.shanzhu.hospital.entity.vo.OrderArrangeVo;
 import com.shanzhu.hospital.entity.vo.OrdersPageVo;
 import com.shanzhu.hospital.mapper.ArrangeMapper;
+import com.shanzhu.hospital.mapper.DrugMapper;
 import com.shanzhu.hospital.mapper.OrderMapper;
+import com.shanzhu.hospital.service.DrugService;
 import com.shanzhu.hospital.service.OrderService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
@@ -36,6 +41,10 @@ public class OrderServiceImpl extends ServiceImpl<OrderMapper, Orders> implement
     private final OrderMapper orderMapper;
 
     private final ArrangeMapper arrangeMapper;
+
+    private final DrugService drugService;
+    private final DrugMapper drugMapper;
+
     /**
      * 查询指定日期的所有预约
      *
@@ -167,15 +176,54 @@ public class OrderServiceImpl extends ServiceImpl<OrderMapper, Orders> implement
      * @return 结果
      */
     @Override
-    public Boolean updateOrder(Orders orders) {
-        //设置挂号单状态
+    @Transactional(rollbackFor = Exception.class)
+    public String updateOrder(Orders orders) {
+        // orders.getODrug() 格式: "药物名:数量,药物名:数量"
+        if (orders.getODrug() != null && !orders.getODrug().isEmpty()) {
+            String[] drugItems = orders.getODrug().split(",");
+            StringBuilder insufficient = new StringBuilder();
+
+            for (String item : drugItems) {
+                String[] arr = item.split(":");
+                String drName = arr[0].trim();
+                Integer quantity = Integer.parseInt(arr[1].trim());
+
+                Drug drug = drugService.lambdaQuery().eq(Drug::getDrName, drName).one();
+                if (drug == null) {
+                    insufficient.append(drName).append("(不存在), ");
+                    continue;
+                }
+
+                if (drug.getDrNumber() < quantity) {
+                    insufficient.append(drName)
+                            .append("(仅剩 ")
+                            .append(drug.getDrNumber())
+                            .append("), ");
+                }
+            }
+
+            if (insufficient.length() > 0) {
+                String msg = insufficient.substring(0, insufficient.length() - 2);
+                return "提交失败：" + msg;
+            }
+
+            // 扣库存
+            for (String item : drugItems) {
+                String[] arr = item.split(":");
+                String drName = arr[0].trim();
+                Integer quantity = Integer.parseInt(arr[1].trim());
+                Drug drug = drugService.lambdaQuery().eq(Drug::getDrName, drName).one();
+                drug.setDrNumber(drug.getDrNumber() - quantity);
+                drugService.updateById(drug);
+            }
+        }
+
+        // 更新挂号单状态
         orders.setOState(1);
-
-        //设置挂号单结束时间
         orders.setOEnd(DateUtil.now());
+        this.updateById(orders);
 
-        //更新
-        return this.updateById(orders);
+        return "更新挂号成功";
     }
 
     /**
@@ -367,6 +415,58 @@ public class OrderServiceImpl extends ServiceImpl<OrderMapper, Orders> implement
     public List<Map<String, Object>> orderLast10Days() {
         return orderMapper.selectLast10Days(); // 直接返回数据
     }
+
+    @Override
+    @Transactional(rollbackFor = Exception.class)
+    public void updateOrderWithStockCheck(Orders orders) {
+        if (orders.getODrug() != null && !orders.getODrug().isEmpty()) {
+            String[] drugItems = orders.getODrug().split(",");
+            // 用来收集库存不足的药物信息
+            StringBuilder insufficient = new StringBuilder();
+
+            for (String item : drugItems) {
+                String[] arr = item.split(":");
+                String drName = arr[0].trim();
+                Integer quantity = Integer.parseInt(arr[1].trim());
+
+                Drug drug = drugService.lambdaQuery().eq(Drug::getDrName, drName).one();
+                if (drug == null) {
+                    insufficient.append(drName).append("(不存在), ");
+                    continue;
+                }
+
+                if (drug.getDrNumber() < quantity) {
+                    insufficient.append(drName)
+                            .append("(仅剩 ")
+                            .append(drug.getDrNumber())
+                            .append("), ");
+                }
+            }
+
+            // 如果有不足药物，直接抛异常
+            if (insufficient.length() > 0) {
+                // 去掉最后的逗号和空格
+                String msg = insufficient.substring(0, insufficient.length() - 2);
+                throw new RuntimeException("提交失败：以下药物库存不足：" + msg);
+            }
+
+            // 扣库存
+            for (String item : drugItems) {
+                String[] arr = item.split(":");
+                String drName = arr[0].trim();
+                Integer quantity = Integer.parseInt(arr[1].trim());
+                Drug drug = drugService.lambdaQuery().eq(Drug::getDrName, drName).one();
+                drug.setDrNumber(drug.getDrNumber() - quantity);
+                drugService.updateById(drug);
+            }
+        }
+
+        // 更新挂号单状态
+        orders.setOState(1);
+        orders.setOEnd(DateUtil.now());
+        this.updateById(orders);
+    }
+
 
 
 }

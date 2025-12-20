@@ -43,4 +43,7 @@ public interface DrugService extends IService<Drug> {
      * @return 结果
      */
     Boolean deleteDrug(Integer drId);
+
+    boolean decreaseDrugStock(Integer drId, Integer quantity);
+
 }

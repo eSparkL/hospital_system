@@ -71,7 +71,7 @@ public interface OrderService {
      * @param orders 挂号单信息
      * @return 结果
      */
-    Boolean updateOrder(Orders orders);
+    String updateOrder(Orders orders);
 
     /**
      * 缴费
@@ -168,5 +168,8 @@ public interface OrderService {
     List<String> countOrderSection();
 
     List<Map<String, Object>> orderLast10Days();
+
+    // 新增方法：挂号提交并检查药物库存
+    void updateOrderWithStockCheck(Orders orders);
 
 }

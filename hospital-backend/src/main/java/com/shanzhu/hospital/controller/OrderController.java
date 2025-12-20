@@ -36,13 +36,16 @@ public class OrderController {
      */
     @PostMapping("updateOrder")
     @Operation(summary = "更新挂号单", description = "更新挂号单信息")
-    public R<Boolean> updateOrder(@Parameter(description = "挂号单信息对象") @RequestBody Orders orders) {
-        if (BooleanUtils.isTrue(orderService.updateOrder(orders))) {
-            return R.ok("更新挂号成功");
+    public R<String> updateOrder(@RequestBody Orders orders) {
+        String resultMsg = orderService.updateOrder(orders);
+        if (resultMsg.startsWith("更新挂号成功")) {
+            return R.ok(resultMsg);
+        } else {
+            return R.error(resultMsg);
         }
-
-        return R.error("更新挂号失败！");
     }
+
+
 
     /**
      * 缴费

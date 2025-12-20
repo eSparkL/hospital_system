@@ -32,6 +32,7 @@ import echarts from 'echarts';//引入echarts
 import DealOrderAgain from "@/views/doctor/DealOrderAgain.vue";
 import DoctorCard from "@/views/doctor/DoctorCard.vue";
 import PatientCard from "@/views/patient/PatientCard.vue"
+import NotFound from '@/views/NotFound.vue'
 
 Vue.prototype.$echarts = echarts;//引入echarts
 Vue.use(ElementUI);
@@ -90,7 +91,9 @@ const routes = [
       { path: "doctorOrder", component: DoctorOrder },
       { path: "doctorCard", component: DoctorCard },
     ]
-  }
+  },
+  // 404 页面路由，必须放在最后
+  { path: '/:pathMatch(.*)*', name: 'NotFound', component: NotFound }
 
 
 ];

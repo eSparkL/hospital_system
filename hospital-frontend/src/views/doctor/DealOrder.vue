@@ -106,7 +106,7 @@
                         <el-input-number
                           v-model="scope.row.quantity"
                           :min="1"
-                          :max="100"
+                          :max="scope.row.dr_number"
                           @change="calculateDrugPrice(scope.row)"
                           size="mini"
                           style="width: 95px;"
@@ -269,47 +269,45 @@ export default {
   },
   methods: {
     submitClick() {
-      // 提交逻辑
       if (!this.diagnosisForm.oRecord) {
         this.$message.warning('请先填写病因');
         return;
       }
 
-      // 验证患者是否存在
       if (!this.pId) {
         this.$message.error('患者ID不能为空');
         return;
       }
 
-
-      // 准备要提交的数据
       const submitData = {
         oId: this.oId,
         pId: this.pId,
         dId: this.dId,
         oRecord: this.diagnosisForm.oRecord,
-        oEnd: this.getOrderEndTime(), // 使用当前时间作为订单结束时间
-        oState: 1, // 设置订单状态为已处理
-        oPriceState: 0, // 设置支付状态为未支付
+        oEnd: this.getOrderEndTime(),
+        oState: 1,
+        oPriceState: 0,
         oTotalPrice: parseFloat(this.totalFee),
+        // 修改药物格式：药物名:数量
         oDrug: this.selectedDrugs.length > 0
-          ? this.selectedDrugs.map(drug => `${drug.drName},${drug.quantity}盒,${(drug.drPrice * drug.quantity).toFixed(2)}元`).join(';')
+          ? this.selectedDrugs.map(drug => `${drug.drName}:${drug.quantity}`).join(',')
           : '',
         oCheck: this.selectedChecks.length > 0
-          ? this.selectedChecks.map(check => `${check.chName},1次,${check.chPrice}元`).join(';')
+          ? this.selectedChecks.map(check => `${check.chName},1次,${check.chPrice}`).join(',')
           : ''
       };
 
       request.post('/order/updateOrder', submitData).then(res => {
-        if (res.data.status !== 200) {
-          this.$message.error(res.data.msg || '提交失败');
-          return;
+        const msg = res.data.msg || '提交失败';
+        if (msg.startsWith('更新挂号成功')) {
+          this.$message.success(msg);
+          this.$router.push('/doctor/orderToday');
+        } else {
+          this.$message.error(msg); // 显示后端返回的库存不足信息
         }
-        this.$message.success('提交成功');
-        this.$router.push('/doctor/orderToday');
       }).catch(error => {
         console.error(error);
-        this.$message.error('提交失败');
+        this.$message.error('提交失败，请重试');
       });
     },
 
@@ -392,9 +390,11 @@ export default {
         this.selectedDrugs.push({
           ...drug,
           quantity: 1,
-          totalPrice: drug.drPrice
+          totalPrice: drug.drPrice,
+          dr_number: drug.dr_number // 添加库存字段
         });
       });
+
 
       // 删除取消选中的项
       deselected.forEach(drug => {

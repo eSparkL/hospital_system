@@ -65,7 +65,7 @@
             </el-menu-item>
 
             <el-menu-item index="drugList" @click="menuClick('drugList')">
-              <i class="iconfont icon-drug-menu" style="font-size: 18px;"> 药物管理</i>
+              <i class="iconfont icon-drug-menu" style="font-size: 18px;"> 药品信息管理</i>
             </el-menu-item>
 
             <el-menu-item index="arrangeIndex" @click="menuClick('arrangeIndex')">
